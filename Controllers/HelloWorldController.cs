@@ -14,9 +14,9 @@ namespace AliceMafia.Controllers
         }
 
         [HttpPost]
-        public string AlicePost(AliceRequest request)
+        public AliceResponse AlicePost(AliceRequest request)
         {
-            return JsonConvert.SerializeObject(request);
+            return new AliceResponse {Response = new ResponseModel { Text = "Привет, мир" } };
         }
 
     }

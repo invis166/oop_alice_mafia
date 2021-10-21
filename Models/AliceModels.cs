@@ -22,6 +22,9 @@ namespace AliceMafia
 
         [JsonProperty("session")] 
         public SessionModel Session { get; set; }
+        
+        [JsonProperty("state")]
+        public RequestStateModel State{ get; set; }
 
         [JsonProperty("version")] 
         public string Version { get; set; }
@@ -32,6 +35,9 @@ namespace AliceMafia
         [JsonProperty("response")] 
         public ResponseModel Response { get; set; }
 
+        [JsonProperty("session_state")]
+        public ResponceStateModel State { get; set; }
+        
         [JsonProperty("session")] 
         public SessionModel Session { get; set; }
 
@@ -113,5 +119,16 @@ namespace AliceMafia
 
         [JsonProperty("hide")] 
         public bool Hide { get; set; }
+    }
+
+    public class ResponceStateModel
+    {
+        
+    }
+    
+    public class RequestStateModel
+    {
+        [JsonProperty("session")]
+        public Dictionary<string, string> Session { get; set; }
     }
 }
