@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace AliceMafia.Controllers
 {
@@ -11,5 +12,12 @@ namespace AliceMafia.Controllers
         {
             return "Hello, World!";
         }
+
+        [HttpPost]
+        public string AlicePost(AliceRequest request)
+        {
+            return JsonConvert.SerializeObject(request);
+        }
+
     }
 }

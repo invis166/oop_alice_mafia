@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 
@@ -58,7 +59,8 @@ namespace AliceMafia
         [JsonProperty("command")] 
         public string Command { get; set; }
 
-        [JsonProperty("type")] 
+        [JsonConverter(typeof(StringEnumConverter))] 
+        [JsonProperty("type")]
         public RequestType Type { get; set; }
 
         [JsonProperty("original_utterance")] 
