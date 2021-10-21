@@ -37,9 +37,6 @@ namespace AliceMafia
 
         [JsonProperty("session_state")]
         public ResponceStateModel State { get; set; }
-        
-        [JsonProperty("session")] 
-        public SessionModel Session { get; set; }
 
         [JsonProperty("version")] 
         public string Version { get; set; } = "1.0";
