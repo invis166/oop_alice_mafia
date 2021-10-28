@@ -22,3 +22,6 @@ https://miro.com/app/board/o9J_loGl4hc=/
 * Различные настройки лобби
 * Анекдоты по ходу игры
 
+![Alt Text](https://c.tenor.com/wvDyYLTH4vEAAAAS/zxc-cat.gif)
+
+
