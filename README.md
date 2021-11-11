@@ -20,7 +20,6 @@ https://miro.com/app/board/o9J_loGl4hc=/
 * Разные роли из игры "Мафия"
 * Разные настройки игры "Мафия" 
 * Различные настройки лобби
-* Анекдоты по ходу игры
 
 ![Alt Text](https://c.tenor.com/YETEvBpf6ggAAAAd/zxc-zxc-cat.gif)
 
