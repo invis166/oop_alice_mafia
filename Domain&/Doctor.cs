@@ -3,10 +3,10 @@
     public class Doctor : IRole
     {
         public string Name => "Доктор";
-
-        public int HealPlayer()
+        
+        public void NightAction(IPlayer player)
         {
-            return 42;
+            // Game.Heal(IPlayer player);
         }
     }
 }

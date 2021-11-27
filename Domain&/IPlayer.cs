@@ -10,7 +10,7 @@
     {
         public int PlayerId { get; }
         public IRole Role { get; }
-        public PlayerState State { get; }
+        public PlayerState State { get; set; }
         public IGame Game { get; }
     }
 }
