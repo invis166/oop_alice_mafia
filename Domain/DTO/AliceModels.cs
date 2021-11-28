@@ -118,7 +118,7 @@ namespace AliceMafia
         public bool Hide { get; set; }
     }
 
-    public class ResponceStateModel
+    public class ResponceStateModel // todo
     {
         
     }
