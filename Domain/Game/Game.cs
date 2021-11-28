@@ -1,11 +1,18 @@
 ﻿using System.Collections.Generic;
+using AliceMafia.Setting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AliceMafia
 {
     public class Game : IGame
     {
+        private IGameSetting gameSetting;
         public List<IPlayer> Players { get; }
+
+        public Game(IGameSetting gameSetting)
+        {
+            this.gameSetting = gameSetting;
+        }
         
         public void AddPlayer(IPlayer player)
         {
@@ -28,7 +35,6 @@ namespace AliceMafia
             // наступает голосование
             // GetResult() из Voting
             // алиса говорит о том, кого посадили, вскрывает его роль (или нет)
-            // 
         }
 
         public void Heal(IPlayer player)
