@@ -2,10 +2,10 @@ namespace AliceMafia.Setting
 {
     public interface IGameSetting
     {
-        public IMafiaSetting MafiaGame { get; set; }
-        public IRoleSetting Civilian { get; set; }
-        public IRoleSetting Mafia { get; set; }
-        public IRoleSetting Doctor { get; set; }
-        public IRoleSetting Sheriff { get; set; }
+        public IGeneralSetting GeneralMessages { get; }
+        public IRoleSetting Civilian { get; }
+        public IRoleSetting Mafia { get; }
+        public IRoleSetting Doctor { get; }
+        public IRoleSetting Sheriff { get; }
     }
 }

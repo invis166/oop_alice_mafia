@@ -1,6 +1,6 @@
-namespace AliceMafia.Setting
+namespace AliceMafia.Setting.DefaultSetting
 {
-    public interface IGeneralSetting
+    public class DefaultGeneral : IGeneralSetting
     {
         public string DayStartMessage { get; }
         public string DayEndMessage { get; }
