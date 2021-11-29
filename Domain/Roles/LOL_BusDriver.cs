@@ -1,6 +1,6 @@
 ﻿namespace AliceMafia
 {
-    public class LOL_BusDriver : IRole
+    public class LOL_BusDriver : RoleBase
     {
         public string Name => "Водитель автобуса";
 

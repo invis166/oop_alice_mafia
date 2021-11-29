@@ -1,12 +1,16 @@
-﻿namespace AliceMafia
+﻿using AliceMafia.Action;
+
+namespace AliceMafia
 {
-    public class Doctor : IRole
+    public class Doctor : RoleBase
     {
-        public string Name => "Доктор";
+        public override int Priority => 5;
+        public override RoleActionBase NightAction { get; }
         
-        public void NightAction(IPlayer player)
+        public Doctor(GameState state) : base(state)
         {
-            // Game.Heal(IPlayer player);
+            NightAction = new DoctorAction(state);
         }
+
     }
 }

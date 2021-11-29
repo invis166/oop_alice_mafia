@@ -1,6 +1,6 @@
 ﻿namespace AliceMafia
 {
-    public class Сourtesan : IRole
+    public class Сourtesan : RoleBase
     {
         public string Name => "Путана";
         //потом поменяйте на givealibi я не могу я смеюсь

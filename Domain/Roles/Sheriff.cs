@@ -2,9 +2,9 @@
 
 namespace AliceMafia
 {
-    public class Mafia : RoleBase
+    public class Sheriff : RoleBase
     {
-        public Mafia(GameState state) : base(state)
+        public Sheriff(GameState state) : base(state)
         {
         }
 

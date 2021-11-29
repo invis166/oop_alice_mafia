@@ -1,6 +1,6 @@
 ﻿namespace AliceMafia
 {
-    public class LOL_Grandma : IRole
+    public class LOL_Grandma : RoleBase
     {
         public string Name => "Бабка с дробовиком"; //Snapfire
         

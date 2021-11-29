@@ -1,6 +1,6 @@
 ﻿namespace AliceMafia
 {
-    public class Maniac : IRole
+    public class Maniac : RoleBase
     {
         public string Name => "Маньяк";
 
