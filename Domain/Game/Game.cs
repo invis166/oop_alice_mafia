@@ -1,17 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using AliceMafia.Setting;
-using Microsoft.AspNetCore.Mvc;
+using AliceMafia.Voting;
+
 
 namespace AliceMafia
 {
     public class Game : IGame
     {
         private IGameSetting gameSetting;
+        private GameState gameState;
+        private Func<IPlayer, string> askPlayerForId;
+        private Action<IPlayer, string> sendMessageTo;
         public List<IPlayer> Players { get; }
 
-        public Game(IGameSetting gameSetting)
+        public Game(IGameSetting gameSetting, Func<IPlayer, string> askPlayerForId, Action<IPlayer, string> sendMessageTo)
         {
+            this.askPlayerForId = askPlayerForId;
             this.gameSetting = gameSetting;
+            this.sendMessageTo = sendMessageTo;
+            gameState = new GameState();
         }
         
         public void AddPlayer(IPlayer player)
@@ -19,12 +31,28 @@ namespace AliceMafia
             throw new System.NotImplementedException();
         }
 
-        public void StartNight()
+        public async void StartNight()
         {
-            // просыпается ВСЯ мафия, проходит голосование
-            // после, в порядке приоритетности, просыпаются другие игроки и выполняют NightAction (в нем есть
-            // строка, которая отвечает за то, что выводить на экран + голосование с 1 игроком)
-             
+            var tasks = new List<Task<string>>();
+            foreach (var player in Players.Where(player => player.Role is Mafia))
+            {
+                sendMessageTo(player, gameSetting.Mafia.NightActionMessage);
+                tasks.Add(Task<string>.Run(() => askPlayerForId(player)));
+            }
+            await Task.WhenAll(tasks);
+
+            var vote = new Vote<IPlayer>();
+            foreach (var votedPlayer in tasks.Select(task => task.Result).Select(GetPlayerById))
+                vote.AddVote(votedPlayer);
+            //todo разбить на методы
+            
+            foreach (var player in Players
+                .Where(player => !(player.Role is Mafia))
+                .OrderBy(player => player.Role.Priority))
+            {
+                var id = askPlayerForId(player);
+                player.Role.NightAction.DoAction(GetPlayerById(id)); 
+            } 
         }
 
         public void StartDay()
@@ -37,25 +65,11 @@ namespace AliceMafia
             // алиса говорит о том, кого посадили, вскрывает его роль (или нет)
         }
 
-        public void Heal(IPlayer player)
+        public IPlayer GetPlayerById(string id)
         {
-            if (player.State == PlayerState.Dead)
-                player.State = PlayerState.Alive;
-        }
-
-        public void Kill(IPlayer player)
-        {
-            player.State = PlayerState.Dead;
-        }
-
-        public void GiveAlibi(IPlayer player)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void CheckRole(IPlayer player)
-        {
-            throw new System.NotImplementedException();
+            return Players.First(player => player.PlayerId == id);
         }
     }
+    
+    public class 
 }
