@@ -1,4 +1,7 @@
-﻿namespace AliceMafia
+﻿using AliceMafia.Action;
+using AliceMafia.Setting;
+
+namespace AliceMafia
 {
     public class LOL_Grandma : RoleBase
     {
@@ -12,5 +15,13 @@
         {
             return 1;
         }
+
+        public LOL_Grandma(GameState state, IRoleSetting setting) : base(state, setting)
+        {
+        }
+
+        public override IRoleSetting Setting { get; protected set; }
+        public override int Priority { get; }
+        public override RoleActionBase NightAction { get; }
     }
 }

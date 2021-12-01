@@ -1,12 +1,17 @@
-﻿namespace AliceMafia
+﻿using AliceMafia.Action;
+using AliceMafia.Setting;
+
+namespace AliceMafia
 {
     public class Сourtesan : RoleBase
     {
-        public string Name => "Путана";
-        //потом поменяйте на givealibi я не могу я смеюсь
-        public int GiveAlibi()
+        public override IRoleSetting Setting { get; protected set; }
+        public override int Priority => 3;
+        public override RoleActionBase NightAction { get; }
+        
+        public Сourtesan(GameState state, IRoleSetting setting) : base(state, setting)
         {
-            return 69;
+            NightAction = new CourtesanAction(state);
         }
     }
 }
