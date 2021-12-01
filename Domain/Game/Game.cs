@@ -84,13 +84,13 @@ namespace AliceMafia
 
         public async void StartDay()
         {
-            var deadPlayers = gameState.GameCycleCount != 0
+            var deadPlayersNames = gameState.GameCycleCount != 0
                 ? gameState.AboutToKillPlayers
                     .Select(player => player.Name)
                     .ToList()
                 : null;
             
-            NotifyPlayers(deadPlayers);
+            NotifyPlayers(deadPlayersNames);
             
             for (var i = 0; i < Players.Count; i++)
             {
@@ -98,7 +98,8 @@ namespace AliceMafia
                 askPlayer(currPlayer, new List<string> { "закончить речь" });
             }
             
-            var candidates = GetAlivePlayersNames(player => player.Id != gameState.PlayerWithAlibi.Id);
+            var candidates = GetAlivePlayersNames(player => 
+                !gameState.AboutToKillPlayers.Contains(player) && player.Id != gameState.PlayerWithAlibi.Id );
             HandleDayVoting(candidates);
             
             gameState.GameCycleCount++;
@@ -107,7 +108,7 @@ namespace AliceMafia
 
         private void NotifyPlayers(List<string> deadPlayers)
         {
-            foreach (var player in Players)
+            foreach (var player in gameState.AlivePlayers)
             {
                 sendMessageTo(player, gameSetting.GeneralMessages.DayStartMessage);
                 if (deadPlayers != null)
