@@ -90,7 +90,8 @@ namespace AliceMafia
                     .ToList()
                 : null;
             
-            NotifyPlayers(deadPlayersNames);
+            NotifyPlayers(gameSetting.GeneralMessages.DayStartMessage);
+            NotifyPlayers(gameSetting.GeneralMessages.GetKillMessage(deadPlayersNames));
             
             for (var i = 0; i < Players.Count; i++)
             {
@@ -106,14 +107,11 @@ namespace AliceMafia
             gameState.Clear();
         }
 
-        private void NotifyPlayers(List<string> deadPlayers)
+        private void NotifyPlayers(string message)
         {
+            if (message == null) return;
             foreach (var player in gameState.AlivePlayers)
-            {
-                sendMessageTo(player, gameSetting.GeneralMessages.DayStartMessage);
-                if (deadPlayers != null)
-                    sendMessageTo(player, gameSetting.GeneralMessages.GetKillMessage(deadPlayers));
-            }
+                sendMessageTo(player, message);
         }
 
         private void HandleDayVoting(List<string> candidates)
@@ -127,8 +125,7 @@ namespace AliceMafia
                 if (voteResult.Count == 1)
                 {
                     var jailed = voteResult.First();
-                    foreach (var player in Players)
-                        sendMessageTo(player, gameSetting.GeneralMessages.GetJailMessage(jailed.Name));
+                    NotifyPlayers(gameSetting.GeneralMessages.GetJailMessage(jailed.Name));
                     gameState.AlivePlayers.Remove(jailed);
                 }
             } 
