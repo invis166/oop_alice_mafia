@@ -29,13 +29,15 @@ namespace AliceMafia
             throw new System.NotImplementedException();
         }
 
-        public async void StartNight()
+        public void StartNight()
         {
-            var playersToKill = GetAlivePlayersNames(player => !(player.Role is Mafia));
+            var notMafiaPlayers = GetAlivePlayersNames(player => !(player.Role is Mafia));
             var mafiaPlayers = gameState.AlivePlayers
                 .Where(player => player.Role is Mafia)
                 .ToList();
-            await StartVote(mafiaPlayers, playersToKill, gameSetting.GeneralMessages.NightVotingMessage);
+            var voteResult =  HandleVote(mafiaPlayers, notMafiaPlayers, gameSetting.GeneralMessages.NightVotingMessage);
+            if (voteResult.Count == 1)
+                gameState.AboutToKillPlayers.Add(voteResult.First());
             
             foreach (var player in Players
                 .Where(player => !(player.Role is Mafia))
@@ -43,17 +45,17 @@ namespace AliceMafia
             {
                 var id = player.Role.NightAction.CanActWithItself
                     ? askPlayer(player, GetAlivePlayersNames(x => true))
-                    : askPlayer(player, GetAlivePlayersNames(x => x.PlayerId != player.PlayerId));
+                    : askPlayer(player, GetAlivePlayersNames(x => x.Id != player.Id));
                 sendMessageTo(player, player.Role.Setting.NightActionMessage);
                 player.Role.NightAction.DoAction(GetPlayerById(id)); 
             }
 
-            foreach (var player in gameState.SemiDeadPlayers)
-                gameState.AlivePlayers.Remove(player);
+            gameState.AboutToKillPlayers = gameState.AboutToKillPlayers
+                .Where(player => player.Id != gameState.HealedPlayer.Id)
+                .ToList();
         }
 
-        private async Task StartVote(List<IPlayer> votingPlayers, List<string> candidatesNames, 
-        string message)
+        private List<IPlayer> HandleVote(List<IPlayer> votingPlayers, List<string> candidatesNames, string message)
         {
             var tasks = new List<Task<string>>();
 
@@ -65,20 +67,20 @@ namespace AliceMafia
                     .ToList())));
             }
 
-            await Task.WhenAll(tasks);
+            var task = Task.WhenAll(tasks);
+            task.Wait();
 
             var vote = new Vote<IPlayer>();
             foreach (var votedPlayer in tasks.Select(task => task.Result).Select(GetPlayerById))
                 vote.AddVote(votedPlayer);
-            
-            var toKill = vote.GetResult(); 
-            if (toKill.Count == 1) // если выбрали не одного, то никого не убивают, короче костыль чтобы работало
-                gameState.SemiDeadPlayers.Add(toKill[0]);
+
+            return vote.GetResult();
         }
 
         public async void StartDay()
         {
-            var deadPlayers = gameState.SemiDeadPlayers
+            //todo в первый день не надо говорить кто умер, просто знакомство
+            var deadPlayers = gameState.AboutToKillPlayers
                 .Select(player => player.Name)
                 .ToList();
             // алиса говорит, кто умер
@@ -87,7 +89,7 @@ namespace AliceMafia
                 sendMessageTo(player, gameSetting.GeneralMessages.DayStartMessage);
                 sendMessageTo(player, gameSetting.GeneralMessages.GetKillMessage(deadPlayers));
             }
-            gameState.SemiDeadPlayers.Clear();    
+            gameState.AboutToKillPlayers.Clear();    
             // по очереди на экранах людей появляется надпись о том, что они могут говорить (определенное время),
             // далее переходит очередь к другому
             for (var i = 0; i < Players.Count; i++)
@@ -97,26 +99,25 @@ namespace AliceMafia
             }
 
             // наступает голосование
-
-            var candidates = gameState.AlivePlayers
-                .Where(p => p.PlayerId != gameState.FuckedPlayer.PlayerId)
-                .Select(p => p.Name)
-                .OrderBy(p => p)
-                .ToList();
-            await StartVote(gameState.AlivePlayers.ToList(), candidates, gameSetting.GeneralMessages.DayVotingMessage);
+            // todo в первый день не голосуем
+            var candidates = GetAlivePlayersNames(player => player.Id != gameState.PlayerWithAlibi.Id);
+            var voteResult = HandleVote(
+                gameState.AlivePlayers.ToList(),
+                candidates,
+                gameSetting.GeneralMessages.DayVotingMessage);
             // алиса говорит о том, кого посадили, вскрывает его роль (или нет)
-            gameState.SemiDeadPlayers.Clear();
+            gameState.AboutToKillPlayers.Clear();
             gameState.GameCycleCount++;
             // очистка gameState
             // todo
         }
 
-        public IPlayer GetPlayerById(string id)
+        private IPlayer GetPlayerById(string id)
         {
-            return Players.First(player => player.PlayerId == id);
+            return Players.First(player => player.Id == id);
         }
 
-        public List<string> GetAlivePlayersNames(Func<IPlayer, bool> filter)
+        private List<string> GetAlivePlayersNames(Func<IPlayer, bool> filter)
         {
             return gameState.AlivePlayers
                 .Where(filter)
