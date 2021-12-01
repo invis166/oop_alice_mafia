@@ -89,7 +89,6 @@ namespace AliceMafia
                 sendMessageTo(player, gameSetting.GeneralMessages.DayStartMessage);
                 sendMessageTo(player, gameSetting.GeneralMessages.GetKillMessage(deadPlayers));
             }
-            gameState.AboutToKillPlayers.Clear();    
             // по очереди на экранах людей появляется надпись о том, что они могут говорить (определенное время),
             // далее переходит очередь к другому
             for (var i = 0; i < Players.Count; i++)
@@ -106,10 +105,16 @@ namespace AliceMafia
                 candidates,
                 gameSetting.GeneralMessages.DayVotingMessage);
             // алиса говорит о том, кого посадили, вскрывает его роль (или нет)
-            gameState.AboutToKillPlayers.Clear();
+            if (voteResult.Count == 1)
+            {
+                var jailed = voteResult.First();
+                foreach (var player in Players)
+                    sendMessageTo(player, gameSetting.GeneralMessages.GetJailMessage(jailed.Name));
+                gameState.AlivePlayers.Remove(jailed);
+            }
+            
             gameState.GameCycleCount++;
-            // очистка gameState
-            // todo
+            gameState.Clear();
         }
 
         private IPlayer GetPlayerById(string id)
