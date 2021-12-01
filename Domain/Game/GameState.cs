@@ -7,10 +7,10 @@ namespace AliceMafia
     public class GameState
     {
         public IPlayer HealedPlayer { get; set; }
-        public IPlayer FuckedPlayer { get; }
+        public IPlayer PlayerWithAlibi { get; }
         public int GameCycleCount { get; set; }
         public HashSet<IPlayer> AlivePlayers { get; set; }
-        public List<IPlayer> SemiDeadPlayers { get; }
+        public List<IPlayer> AboutToKillPlayers { get; set; }
     }
 
     
