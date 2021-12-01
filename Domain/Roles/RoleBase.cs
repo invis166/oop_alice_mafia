@@ -6,11 +6,11 @@ namespace AliceMafia
     public abstract class RoleBase
     {
         private GameState gameState;
-        public readonly IRoleSetting Setting;
+        public abstract IRoleSetting Setting { get; protected set; }
         public abstract int Priority { get; }
         public abstract RoleActionBase NightAction { get; }
-        
-        public RoleBase(GameState state, IRoleSetting setting)
+
+        protected RoleBase(GameState state, IRoleSetting setting)
         {
             gameState = state;
             Setting = setting;
