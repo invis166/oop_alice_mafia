@@ -26,7 +26,12 @@ namespace AliceMafia
         
         public void AddPlayer(IPlayer player)
         {
-            throw new System.NotImplementedException();
+            Players.Add(player);
+        }
+
+        public void StartGame()
+        {
+            throw new NotImplementedException();
         }
 
         public void StartNight()
