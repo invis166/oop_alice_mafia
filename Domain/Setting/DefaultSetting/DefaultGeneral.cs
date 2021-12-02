@@ -8,8 +8,12 @@ namespace AliceMafia.Setting.DefaultSetting
         public string DayEndMessage { get; }
         public string NightVotingMessage { get; }
         public string DayVotingMessage { get; }
+        public string GetKillMessage(List<string> names)
+        {
+            throw new System.NotImplementedException();
+        }
 
-        public string GetKillMessage(IEnumerable<string> names)
+        public string GetJailMessage(string name)
         {
             throw new System.NotImplementedException();
         }
