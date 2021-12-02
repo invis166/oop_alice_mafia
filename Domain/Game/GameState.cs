@@ -9,6 +9,7 @@ namespace AliceMafia
     {
         public IPlayer HealedPlayer { get; set; }
         public IPlayer PlayerWithAlibi { get; set; }
+        public IPlayer CheckedBySheriff { get; set; }
         public int GameCycleCount { get; set; }
         public HashSet<IPlayer> AlivePlayers { get; set; }
         public List<IPlayer> AboutToKillPlayers { get; set; }

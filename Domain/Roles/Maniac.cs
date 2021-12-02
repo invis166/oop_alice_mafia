@@ -1,12 +1,17 @@
-﻿namespace AliceMafia
+﻿using AliceMafia.Action;
+using AliceMafia.Setting;
+
+namespace AliceMafia
 {
     public class Maniac : RoleBase
     {
-        public string Name => "Маньяк";
-
-        public int KillPlayer()
+        public override IRoleSetting Setting { get; protected set; }
+        public override int Priority => 2;
+        public override RoleActionBase NightAction { get; }
+        
+        public Maniac(GameState state, IRoleSetting setting) : base(state, setting)
         {
-            return 0;
+            NightAction = new ManiacAction(state);
         }
     }
 }
