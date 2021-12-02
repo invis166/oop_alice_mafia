@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Policy;
 
 namespace AliceMafia
@@ -17,6 +18,7 @@ namespace AliceMafia
         {
             HealedPlayer = default;
             PlayerWithAlibi = default;
+            AlivePlayers.ExceptWith(AboutToKillPlayers.ToHashSet());
             AboutToKillPlayers.Clear();
         }
     }
