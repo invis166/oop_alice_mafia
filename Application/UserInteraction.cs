@@ -1,7 +1,10 @@
 namespace AliceMafia.Application
 {
     public class UserInteraction
-    {   
-        public AliceResponse GetPressedButton()
+    {
+        public void SendResponse()
+        {
+            
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -19,7 +20,11 @@ namespace AliceMafia.Controllers
             // приходит запрос на создать лобби -> создаем лобби
             // приходит запрос на присоединиться к лобби -> присоединяемся к лобби
             // приходит запрос на запустить игру -> запускаем игру
-            return new AliceResponse {Response = new ResponseModel { Text = "Привет, мир" } };
+            return new AliceResponse {Response = new ResponseModel { Text = "Текст...", Buttons = new List<ButtonModel>
+            {
+                new ButtonModel{Title = "Нажми!!"},
+                new ButtonModel{Title = "Нажми пж..."}
+            } } };
         }
     }
 }
