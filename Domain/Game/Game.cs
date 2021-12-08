@@ -34,6 +34,64 @@ namespace AliceMafia
             throw new NotImplementedException();
         }
 
+        public UserResponse ProcessUserRequest(UserRequest request)
+        {
+            // Где-то еще надо чистить GameState и прибавлять Cycle, а еще где-то надо голосование обработать
+            var currentPlayer = GetPlayerById(request.id);
+            
+            // ДЕНЬ
+            if (gameState.TimeOfDay == TimeOfDay.Day)
+            {
+                currentPlayer.HasVoted = false;
+                if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightVoting)
+                {
+                    if (gameState.VoteCounter == gameState.AlivePlayers.Count)
+                    {
+                        currentPlayer.State = PlayerState.DayVoting;
+                        return new UserResponse {Title = "голосуй днем", 
+                            Buttons = gameState.AlivePlayers
+                                .Where(x => x.Id != currentPlayer.Id)
+                                .Select(x => x.Name)
+                                .ToList()};
+                        
+                    }
+                }
+                currentPlayer.State = PlayerState.DayWaiting;
+                return new UserResponse {Title = "жди днем"};
+            }
+            
+            //НОЧЬ
+            var currentPriority = currentPlayer.Role.Priority;
+            if (currentPlayer.State == PlayerState.NightVoting || currentPriority != gameState.WhoseTurn)
+            {
+                currentPlayer.State = PlayerState.NightWaiting;
+                return new UserResponse {Title = "жди ночью"};
+            }
+
+            currentPlayer.State = PlayerState.NightVoting;
+            
+            var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
+            
+            if (countOfNotVotedPlayers == 1)
+            {
+                var nextPriority = NextPriority(currentPriority);
+                gameState.WhoseTurn = nextPriority == 0 ? 1 : nextPriority;
+            }
+
+            currentPlayer.HasVoted = true;
+            return new UserResponse {Title = "голосуй ночью", 
+                Buttons = gameState.AlivePlayers
+                    .Where(x => x.Id != currentPlayer.Id)
+                    .Select(x => x.Name)
+                    .ToList()};
+        }
+
+        public int NextPriority(int priority) => gameState
+            .AlivePlayers
+            .Select(x => x.Role.Priority)
+            .OrderBy(x => x)
+            .FirstOrDefault(x => x > priority);
+
         public void StartNight()
         {
             var notMafiaPlayers = GetAlivePlayersNames(player => !(player.Role is Mafia));
@@ -83,26 +141,20 @@ namespace AliceMafia
             
             var vote = new Vote<IPlayer>();
             foreach (var votedPlayer in tasks.Select(task => task.Result).Select(GetPlayerById))
+            {
                 vote.AddVote(votedPlayer);
+                gameState.VoteCounter++;
+            }
             return vote.GetResult();
         }
 
         public async void StartDay()
         {
-            var deadPlayersNames = gameState.GameCycleCount != 0
-                ? gameState.AboutToKillPlayers
-                    .Select(player => player.Name)
-                    .ToList()
-                : null;
-            
-            NotifyPlayers(gameSetting.GeneralMessages.DayStartMessage);
-            NotifyPlayers(gameSetting.GeneralMessages.GetKillMessage(deadPlayersNames));
-            
-            for (var i = 0; i < Players.Count; i++)
-            {
-                var currPlayer = Players[(i + gameState.GameCycleCount) % Players.Count];
-                askPlayer(currPlayer, new List<string> { "закончить речь" });
-            }
+            // var deadPlayersNames = gameState.GameCycleCount != 0
+            //     ? gameState.AboutToKillPlayers
+            //         .Select(player => player.Name)
+            //         .ToList()
+            //     : null;
             
             var candidates = GetAlivePlayersNames(player => 
                 !gameState.AboutToKillPlayers.Contains(player) && player.Id != gameState.PlayerWithAlibi.Id );
@@ -136,10 +188,7 @@ namespace AliceMafia
             } 
         }
 
-        private IPlayer GetPlayerById(string id)
-        {
-            return Players.First(player => player.Id == id);
-        }
+        private IPlayer GetPlayerById(string id) => Players.First(player => player.Id == id);
 
         private List<string> GetAlivePlayersNames(Func<IPlayer, bool> filter)
         {
