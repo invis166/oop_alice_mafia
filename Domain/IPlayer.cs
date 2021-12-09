@@ -1,13 +1,5 @@
 ﻿namespace AliceMafia
 {
-    public enum PlayerState
-    {
-        DayVoting,
-        NightVoting,
-        DayWaiting,
-        NightWaiting
-    }
-    
     public interface IPlayer
     {
         public string Id { get; }
