@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AliceMafia
+﻿namespace AliceMafia
 {
     public class UserRequest
     {

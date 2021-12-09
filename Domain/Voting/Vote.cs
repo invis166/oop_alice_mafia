@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -5,11 +6,11 @@ namespace AliceMafia.Voting
 {
     public class Vote<TVal> : IVote<TVal>
     {
-        private Dictionary<TVal, int> voteCounter;
+        private ConcurrentDictionary<TVal, int> voteCounter;
 
         public Vote()
         {
-            voteCounter = new Dictionary<TVal, int>();
+            voteCounter = new ConcurrentDictionary<TVal, int>();
         }
 
         public List<TVal> GetResult()
