@@ -35,34 +35,56 @@ namespace AliceMafia
             throw new NotImplementedException();
         }
 
-        private UserResponse ProcessRequestWhileDay(IPlayer currentPlayer)
+        private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
         {
+            var currentPlayer = GetPlayerById(userRequest.id);
             currentPlayer.HasVoted = false;
             if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightVoting)
             {
-                if (gameState.VoteCounter == gameState.AlivePlayers.Count)
+                if (gameState.Voting.totalVoteCounter == gameState.AlivePlayers.Count)
                 {
                     currentPlayer.State = PlayerState.DayVoting;
                     return new UserResponse {Title = "голосуй днем", 
                         Buttons = gameState.AlivePlayers
                             .Where(x => x.Id != currentPlayer.Id)
                             .Select(x => x.Name)
-                            .ToList()};
-                        
+                            .ToList()};   
+                }
+                else
+                {
+                    currentPlayer.State = PlayerState.DayWaiting;
+                    return new UserResponse {Title = "жди днем"};
                 }
             }
-            currentPlayer.State = PlayerState.DayWaiting;
-            return new UserResponse {Title = "жди днем"};
-        }
+            else if (currentPlayer.State == PlayerState.DayVoting)
+            {
+                gameState.Voting.AddVote(GetPlayerById(userRequest.data));
+                currentPlayer.State = PlayerState.DayWaiting;
+            }
 
-        private UserResponse ProcessRequestWhileNight(IPlayer currentPlayer)
+            return new UserResponse();
+        }
+        
+        
+
+        private UserResponse ProcessRequestWhileNight(UserRequest userRequest)
         {
+            var currentPlayer = GetPlayerById(userRequest.id);
             var currentPriority = currentPlayer.Role.Priority;
-            if (currentPlayer.State == PlayerState.NightVoting || currentPriority != gameState.WhoseTurn)
+            if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn || currentPlayer.State == PlayerState.DayWaiting)
             {
                 currentPlayer.State = PlayerState.NightWaiting;
                 return new UserResponse {Title = "жди ночью"};
             }
+            
+            if (currentPlayer.State == PlayerState.NightVoting)
+            {
+                currentPlayer.Role.NightAction.DoAction(GetPlayerById(userRequest.id));
+                currentPlayer.State = PlayerState.NightWaiting;
+                currentPlayer.HasVoted = true;
+                return new UserResponse {Title = "жди ночью"};
+            }
+            
             currentPlayer.State = PlayerState.NightVoting;
             var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
             if (countOfNotVotedPlayers == 1)
@@ -81,14 +103,13 @@ namespace AliceMafia
         public UserResponse ProcessUserRequest(UserRequest request)
         {
             // Где-то еще надо чистить GameState и прибавлять Cycle, а еще где-то надо голосование обработать
-            var currentPlayer = GetPlayerById(request.id);
-            
+
             // ДЕНЬ
             if (gameState.TimeOfDay == TimeOfDay.Day)
-                return ProcessRequestWhileDay(currentPlayer);
-
+                return ProcessRequestWhileDay(request);
+            
             //НОЧЬ
-            return ProcessRequestWhileNight(currentPlayer);
+            return ProcessRequestWhileNight(request);
         }
 
         public int NextPriority(int priority) => gameState
@@ -148,7 +169,6 @@ namespace AliceMafia
             foreach (var votedPlayer in tasks.Select(task => task.Result).Select(GetPlayerById))
             {
                 vote.AddVote(votedPlayer);
-                gameState.VoteCounter++;
             }
             return vote.GetResult();
         }

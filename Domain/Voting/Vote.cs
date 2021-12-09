@@ -7,6 +7,7 @@ namespace AliceMafia.Voting
     public class Vote<TVal> : IVote<TVal>
     {
         private ConcurrentDictionary<TVal, int> voteCounter;
+        public int totalVoteCounter;
 
         public Vote()
         {
@@ -25,6 +26,7 @@ namespace AliceMafia.Voting
 
         public void AddVote(TVal voteFor)
         {
+            totalVoteCounter++;
             if (!voteCounter.ContainsKey(voteFor))
                 voteCounter[voteFor] = 0;
             voteCounter[voteFor] += 1;

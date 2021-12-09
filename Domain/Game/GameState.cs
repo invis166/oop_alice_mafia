@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using AliceMafia.Voting;
 
 namespace AliceMafia
 {
@@ -18,6 +19,7 @@ namespace AliceMafia
         public HashSet<IPlayer> AlivePlayers { get; set; }
         public List<IPlayer> AboutToKillPlayers { get; set; }
         public TimeOfDay TimeOfDay { get; set; }
+        public Vote<IPlayer> Voting { get; set; }
         public int VoteCounter = 0;
         public int WhoseTurn = 1;
 
