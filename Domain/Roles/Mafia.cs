@@ -9,8 +9,9 @@ namespace AliceMafia
         public override int Priority => 1;
         public override RoleActionBase NightAction { get; }
         
-        public Mafia(GameState state, IRoleSetting setting) : base(state, setting)
+        public Mafia(RoleActionBase action, IRoleSetting setting) : base(setting)
         {
+            NightAction = action;
         }
     }
 }
