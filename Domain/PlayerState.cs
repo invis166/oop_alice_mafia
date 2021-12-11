@@ -3,8 +3,9 @@ namespace AliceMafia
     public enum PlayerState
     {
         DayVoting,
-        NightVoting,
+        NightAction,
         DayWaiting,
-        NightWaiting
+        NightWaiting,
+        DoneAction,
     }
 }
