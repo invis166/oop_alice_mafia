@@ -49,7 +49,7 @@ namespace AliceMafia
                     return new UserResponse {Title = "завершить день"};
                 }
                 currentPlayer.HasVoted = true;
-                return new UserResponse {Title = "первый день"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.GameStartMessage};
             }
             
             if (currentPlayer.State == PlayerState.DayVoting)
@@ -64,11 +64,11 @@ namespace AliceMafia
                     return new UserResponse {Title = "завершить день"};
                 }
                 
-                return new UserResponse {Title = "жди днем"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
             }
             
             if (currentPlayer.State == PlayerState.DayWaiting)
-                return new UserResponse {Title = "жди днем"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
 
             if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightAction)
             {
@@ -91,7 +91,7 @@ namespace AliceMafia
             if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn || currentPlayer.State == PlayerState.DayWaiting)
             {
                 currentPlayer.State = PlayerState.NightWaiting;
-                return new UserResponse {Title = "жди ночью"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
             
             if (currentPlayer.State == PlayerState.NightAction)
@@ -101,7 +101,7 @@ namespace AliceMafia
                 currentPlayer.HasVoted = true;
                 if (currentPlayer.Role is Sheriff)
                     return new UserResponse {Title = "ты шриф..."};
-                return new UserResponse {Title = "жди ночью"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
 
             if (currentPriority == gameState.WhoseTurn)
