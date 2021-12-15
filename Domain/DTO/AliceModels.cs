@@ -36,7 +36,7 @@ namespace AliceMafia
         public ResponseModel Response { get; set; }
 
         [JsonProperty("session_state")]
-        public ResponceStateModel State { get; set; }
+        public GameIdModel State { get; set; }
 
         [JsonProperty("version")] 
         public string Version { get; set; } = "1.0";
@@ -118,14 +118,15 @@ namespace AliceMafia
         public bool Hide { get; set; }
     }
 
-    public class ResponceStateModel // todo
+    public class GameIdModel 
     {
-        
+        [JsonProperty("game_id")]
+        public string GameId { get; set; }
     }
     
     public class RequestStateModel
     {
         [JsonProperty("session")]
-        public Dictionary<string, string> Session { get; set; }
+        public GameIdModel Session { get; set; }
     }
 }

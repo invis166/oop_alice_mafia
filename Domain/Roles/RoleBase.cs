@@ -7,8 +7,12 @@ namespace AliceMafia
     {
         public abstract IRoleSetting Setting { get; protected set; }
         public abstract int Priority { get; }
-        public abstract RoleActionBase NightAction { get; }
+        public abstract RoleActionBase NightAction { get; protected set; }
 
-        protected RoleBase(IRoleSetting setting) => Setting = setting;
+        protected RoleBase(RoleActionBase action, IRoleSetting setting)
+        {
+            Setting = setting;
+            NightAction = action;
+        }
     }
 }

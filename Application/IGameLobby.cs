@@ -1,3 +1,5 @@
+using System;
+
 namespace AliceMafia.Application
 {
     public abstract class GameLobbyBase
@@ -14,9 +16,9 @@ namespace AliceMafia.Application
             
         }
         
-        public void HandleRequest(AliceRequest request)
+        public AliceResponse HandleRequest(AliceRequest request)
         {
-            
+            throw new NotImplementedException();
         }
     }
 }

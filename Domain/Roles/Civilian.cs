@@ -7,9 +7,9 @@ namespace AliceMafia
     {
         public override IRoleSetting Setting { get; protected set; }
         public override int Priority => -1;
-        public override RoleActionBase NightAction { get; }
+        public override RoleActionBase NightAction { get; protected set; }
 
-        public Civilian(GameState state, IRoleSetting setting) : base(state, setting)
+        public Civilian(RoleActionBase action, IRoleSetting setting) : base(action, setting)
         {
         }
     }
