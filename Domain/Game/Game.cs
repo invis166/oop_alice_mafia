@@ -13,15 +13,11 @@ namespace AliceMafia
     {
         private IGameSetting gameSetting;
         private GameState gameState;
-        private Func<IPlayer, List<string>, string> askPlayer;
-        private Action<IPlayer, string> sendMessageTo;
         public List<IPlayer> Players { get; }
 
-        public Game(IGameSetting gameSetting, Func<IPlayer, List<string>, string> askPlayer, Action<IPlayer, string> sendMessageTo)
+        public Game(IGameSetting gameSetting)
         {
-            this.askPlayer = askPlayer;
             this.gameSetting = gameSetting;
-            this.sendMessageTo = sendMessageTo;
             gameState = new GameState();
         }
         
@@ -30,6 +26,7 @@ namespace AliceMafia
             Players.Add(player);
         }
 
+        //todo
         public void StartGame()
         {
             throw new NotImplementedException();
@@ -100,7 +97,7 @@ namespace AliceMafia
                 currentPlayer.State = PlayerState.NightWaiting;
                 currentPlayer.HasVoted = true;
                 if (currentPlayer.Role is Sheriff)
-                    return new UserResponse {Title = "ты шриф..."};
+                    return new UserResponse {Title = "ты шериф..."};
                 return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
 
@@ -123,8 +120,9 @@ namespace AliceMafia
                     }
                     gameState.WhoseTurn = nextPriority;
                 }
-                
-                return new UserResponse {Title = currentPlayer.Role.Setting.NightActionMessage, 
+
+                var sss = gameSetting.GetType().GetCustomAttributes(true);
+                return new UserResponse {Title = gameSetting.Role.NightActionMessage, 
                     Buttons = gameState.AlivePlayers
                         .Where(x => x.Id != currentPlayer.Id)
                         .Select(x => x.Name)

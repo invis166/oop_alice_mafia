@@ -5,13 +5,11 @@ namespace AliceMafia
 {
     public abstract class RoleBase
     {
-        public abstract IRoleSetting Setting { get; protected set; }
         public abstract int Priority { get; }
         public abstract RoleActionBase NightAction { get; protected set; }
 
-        protected RoleBase(RoleActionBase action, IRoleSetting setting)
+        protected RoleBase(RoleActionBase action)
         {
-            Setting = setting;
             NightAction = action;
         }
     }

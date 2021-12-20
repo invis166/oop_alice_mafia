@@ -5,11 +5,10 @@ namespace AliceMafia
 {
     public class Doctor : RoleBase
     {
-        public override IRoleSetting Setting { get; protected set; }
         public override int Priority => 4;
         public override RoleActionBase NightAction { get; protected set; }
         
-        public Doctor(RoleActionBase action, IRoleSetting setting) : base(action, setting)
+        public Doctor(RoleActionBase action) : base(action)
         {
         }
     }
