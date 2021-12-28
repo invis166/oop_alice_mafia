@@ -1,12 +1,13 @@
 using System;
+using System.Timers;
 
 namespace AliceMafia.Application
 {
-    public abstract class GameLobbyBase
+    public class GameLobby
     {
         public string Id { get; set; }
 
-        public void AddPlayer(IPlayer player)
+        public void AddPlayer(string player)
         {
             
         }
@@ -19,6 +20,11 @@ namespace AliceMafia.Application
         public AliceResponse HandleRequest(AliceRequest request)
         {
             throw new NotImplementedException();
+        }
+
+        public GameLobby()
+        {
+            Id = DateTime.Now.GetHashCode().ToString().Substring(0, 6);
         }
     }
 }

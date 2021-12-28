@@ -35,6 +35,8 @@ namespace AliceMafia
         private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
         {
             var currentPlayer = GetPlayerById(userRequest.id);
+            if (!gameState.AlivePlayers.Contains(currentPlayer))
+                return new UserResponse {Title = "Чел ты в гробе"};
             currentPlayer.HasVoted = false;
 
             if (gameState.IsFirstDay)
@@ -66,24 +68,31 @@ namespace AliceMafia
             
             if (currentPlayer.State == PlayerState.DayWaiting)
                 return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
-
             if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightAction)
             {
                 currentPlayer.State = PlayerState.DayVoting;
                 
-                return new UserResponse {Title = gameSetting.GeneralMessages.DayVotingMessage, 
+                return new UserResponse {Title = gameSetting
+                                                     .GeneralMessages
+                                                     .GetKillMessage(gameState
+                                                         .AboutToKillPlayers
+                                                         .Where(x => x.Id != gameState.HealedPlayer.Id)
+                                                         .Select(x => x.Name).ToList()) 
+                                                 + gameSetting.GeneralMessages.DayVotingMessage, 
                     Buttons = gameState.AlivePlayers
                         .Where(x => x.Id != currentPlayer.Id && x.Id != gameState.PlayerWithAlibi.Id)
                         .Select(x => x.Name)
                         .ToList()};   
             }
-
+            
             return new UserResponse();
         }
 
         private UserResponse ProcessRequestWhileNight(UserRequest userRequest)
         {
             var currentPlayer = GetPlayerById(userRequest.id);
+            if (!gameState.AlivePlayers.Contains(currentPlayer))
+                return new UserResponse {Title = "Чел ты в гробе"};
             var currentPriority = currentPlayer.Role.Priority;
             if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn || currentPlayer.State == PlayerState.DayWaiting)
             {
@@ -97,7 +106,12 @@ namespace AliceMafia
                 currentPlayer.State = PlayerState.NightWaiting;
                 currentPlayer.HasVoted = true;
                 if (currentPlayer.Role is Sheriff)
-                    return new UserResponse {Title = "ты шериф..."};
+                {
+                    var isMafia = gameState.CheckedBySheriff.Role is Mafia;
+                    var mafiaName = gameSetting.roles["mafia"].Name;
+                    return new UserResponse {Title = "Игрок" + (isMafia ? "" : "не") + mafiaName};
+                }
+
                 return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
 
@@ -105,7 +119,8 @@ namespace AliceMafia
             {
                 currentPlayer.State = PlayerState.NightAction;
                 
-                var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
+                var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x 
+                    => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
                 if (countOfNotVotedPlayers == 1)
                 {
                     var nextPriority = NextPriority(currentPriority);
@@ -117,12 +132,14 @@ namespace AliceMafia
                             gameState.AboutToKillPlayers.Add(mafiaVoteResult.First());
                         gameState.Voting = new Vote<IPlayer>();
                         nextPriority = 1;
+                        if (gameState.HealedPlayer != null)
+                            gameState.AboutToKillPlayers.Remove(gameState.HealedPlayer);
+                        gameState.AlivePlayers.ExceptWith(gameState.AboutToKillPlayers);
                     }
                     gameState.WhoseTurn = nextPriority;
                 }
 
-                var sss = gameSetting.GetType().GetCustomAttributes(true);
-                return new UserResponse {Title = gameSetting.Role.NightActionMessage, 
+                return new UserResponse {Title = gameSetting.roles[currentPlayer.Role.GetType().Name].NightActionMessage, 
                     Buttons = gameState.AlivePlayers
                         .Where(x => x.Id != currentPlayer.Id)
                         .Select(x => x.Name)
