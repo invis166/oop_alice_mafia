@@ -7,6 +7,6 @@ namespace AliceMafia.Action
         }
 
         public override bool CanActWithItself => false;
-        public override void DoAction(IPlayer player) => gameState.CheckedBySheriff = player;
+        public override void DoAction(Player player) => gameState.CheckedBySheriff = player;
     }
 }

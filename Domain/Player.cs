@@ -1,11 +1,17 @@
 ﻿namespace AliceMafia
 {
-    public interface IPlayer
+    public class Player
     {
-        public string Id { get; }
+        public string Id { get;  }
         public string Name { get; }
         public RoleBase Role { get; }
         public PlayerState State { get; set; }
         public bool HasVoted { get; set; }
+
+        public Player(string id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
     }
 }

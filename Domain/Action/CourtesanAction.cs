@@ -7,6 +7,6 @@ namespace AliceMafia.Action
         }
 
         public override bool CanActWithItself => true;
-        public override void DoAction(IPlayer player) => gameState.PlayerWithAlibi = player;
+        public override void DoAction(Player player) => gameState.PlayerWithAlibi = player;
     }
 }

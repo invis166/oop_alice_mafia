@@ -12,14 +12,14 @@ namespace AliceMafia
     
     public class GameState
     {
-        public IPlayer HealedPlayer { get; set; }
-        public IPlayer PlayerWithAlibi { get; set; }
-        public IPlayer CheckedBySheriff { get; set; }
+        public Player HealedPlayer { get; set; }
+        public Player PlayerWithAlibi { get; set; }
+        public Player CheckedBySheriff { get; set; }
         public bool IsFirstDay;
-        public HashSet<IPlayer> AlivePlayers { get; set; }
-        public List<IPlayer> AboutToKillPlayers { get; set; }
+        public HashSet<Player> AlivePlayers { get; set; }
+        public List<Player> AboutToKillPlayers { get; set; }
         public TimeOfDay TimeOfDay { get; set; }
-        public Vote<IPlayer> Voting { get; set; }
+        public Vote<Player> Voting { get; set; }
         public int WhoseTurn;
 
         public GameState()
@@ -29,10 +29,10 @@ namespace AliceMafia
             PlayerWithAlibi = default;
             CheckedBySheriff = default;
             IsFirstDay = true;
-            AlivePlayers = new HashSet<IPlayer>();
-            AboutToKillPlayers = new List<IPlayer>();
+            AlivePlayers = new HashSet<Player>();
+            AboutToKillPlayers = new List<Player>();
             TimeOfDay = TimeOfDay.Day;
-            Voting = new Vote<IPlayer>();
+            Voting = new Vote<Player>();
         }
 
         public void Clear()
@@ -40,7 +40,7 @@ namespace AliceMafia
             HealedPlayer = default;
             PlayerWithAlibi = default;
             AlivePlayers.ExceptWith(AboutToKillPlayers.ToHashSet());
-            Voting = new Vote<IPlayer>();
+            Voting = new Vote<Player>();
             AboutToKillPlayers.Clear();
         }
     }

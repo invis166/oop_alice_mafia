@@ -7,16 +7,18 @@ namespace AliceMafia.Application
     {
         public string Id { get; set; }
         public bool GameStarted { get; set; }
-        public int PlayersCount { get; set; }
+        public int PlayersCount => game.Players.Count;
+        private Game game = new Game();
 
         public void AddPlayer(string id, string name)
         {
-            PlayersCount++;
+            game.AddPlayer(id, name);
         }
 
         public void StartGame()
         {
             GameStarted = true;
+            game.StartGame();
         }
         
         public AliceResponse HandleRequest(AliceRequest request)
@@ -26,7 +28,7 @@ namespace AliceMafia.Application
 
         public GameLobby()
         {
-            Id = DateTime.Now.GetHashCode().ToString().Substring(0, 6);
+            Id = Math.Abs(DateTime.Now.GetHashCode()).ToString()[..6];
         }
     }
 }

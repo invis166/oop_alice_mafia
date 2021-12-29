@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AliceMafia.Setting;
 using AliceMafia.Voting;
 using System.Security.Policy;
+using AliceMafia.Setting.DefaultSetting;
 
 
 namespace AliceMafia
@@ -13,23 +14,44 @@ namespace AliceMafia
     {
         private IGameSetting gameSetting;
         private GameState gameState;
-        public List<IPlayer> Players { get; }
+        public List<Player> Players { get; }
 
         public Game(IGameSetting gameSetting)
         {
             this.gameSetting = gameSetting;
             gameState = new GameState();
         }
-        
-        public void AddPlayer(IPlayer player)
+
+        public Game()
         {
-            Players.Add(player);
+            gameSetting = new DefaultGameSetting();
+            gameState = new GameState();
+        }
+        
+        public void AddPlayer(string id, string name)
+        {
+            Players.Add(new Player(id, name));
         }
 
         //todo
         public void StartGame()
         {
-            throw new NotImplementedException();
+            var playersCopyArray = new Player[Players.Count];
+            Players.CopyTo(playersCopyArray);
+            var playersCopyList = playersCopyArray.ToList();
+            var random = new Random();
+            // распределить роли
+            // запустить игру
+            if (Players.Count < 8)
+            {
+                var mafia = Players[random.Next(Players.Count)];
+                Players.Remove(mafia);
+               
+            }
+            else
+            {
+                
+            }
         }
 
         private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
@@ -130,7 +152,7 @@ namespace AliceMafia
                         var mafiaVoteResult = gameState.Voting.GetResult();
                         if (mafiaVoteResult.Count != 1)
                             gameState.AboutToKillPlayers.Add(mafiaVoteResult.First());
-                        gameState.Voting = new Vote<IPlayer>();
+                        gameState.Voting = new Vote<Player>();
                         nextPriority = 1;
                         if (gameState.HealedPlayer != null)
                             gameState.AboutToKillPlayers.Remove(gameState.HealedPlayer);
@@ -163,6 +185,6 @@ namespace AliceMafia
             .OrderBy(x => x)
             .FirstOrDefault(x => x > priority);
 
-        private IPlayer GetPlayerById(string id) => Players.First(player => player.Id == id);
+        private Player GetPlayerById(string id) => Players.First(player => player.Id == id);
     }
 }

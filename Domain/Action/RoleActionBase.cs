@@ -10,6 +10,6 @@ namespace AliceMafia.Action
             this.gameState = gameState;
         }
         
-        public abstract void DoAction(IPlayer player);
+        public abstract void DoAction(Player player);
     }
 }

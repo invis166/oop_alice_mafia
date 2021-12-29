@@ -7,7 +7,7 @@ namespace AliceMafia.Action
         }
 
         public override bool CanActWithItself { get; }
-        public override void DoAction(IPlayer player)
+        public override void DoAction(Player player)
         {
             gameState.Voting.AddVote(player);
         }
