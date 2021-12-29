@@ -11,6 +11,17 @@ namespace AliceMafia
         SimpleUtterance,
         ButtonPressed
     }
+
+    public enum DialogState
+    {
+        StartState,
+        GameStartState, // создать игру или подключиться
+        WriteName, // вписать имя игрока
+        WriteLobby,
+        Wait,
+        StartMafia,
+        InGame
+    }
     
     public class AliceRequest
     {
@@ -36,7 +47,7 @@ namespace AliceMafia
         public ResponseModel Response { get; set; }
 
         [JsonProperty("session_state")]
-        public GameIdModel State { get; set; }
+        public StateModel State { get; set; }
 
         [JsonProperty("version")] 
         public string Version { get; set; } = "1.0";
@@ -118,15 +129,22 @@ namespace AliceMafia
         public bool Hide { get; set; }
     }
 
-    public class GameIdModel 
+    public class StateModel 
     {
         [JsonProperty("game_id")]
         public string GameId { get; set; }
+        
+        [JsonConverter(typeof(StringEnumConverter))] 
+        [JsonProperty("dialog_state")] 
+        public DialogState DgState { get; set; }
+        
+        [JsonProperty("player_name")] 
+        public string Name { get; set; }
     }
     
     public class RequestStateModel
     {
         [JsonProperty("session")]
-        public GameIdModel Session { get; set; }
+        public StateModel Session { get; set; }
     }
 }
