@@ -79,14 +79,19 @@ namespace AliceMafia
 
         private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
         {
+            var gameOver = CheckGameOver();
+            if (gameOver.IsGameOver)
+                return gameOver;
+            
             var currentPlayer = GetPlayerById(userRequest.UserId);
+            currentPlayer.HasVoted = false;
             if (!gameState.AlivePlayers.Contains(currentPlayer))
                 return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
-            
+
             if (currentPlayer.State == PlayerState.DayWaiting)
                 return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
 
-            if (gameState.IsFirstDay)
+            if (gameState.DaysCounter == 0)
                 return HandleFirstDay(currentPlayer);
             
             if (currentPlayer.State == PlayerState.DayVoting)
@@ -101,16 +106,14 @@ namespace AliceMafia
         private UserResponse HandleDayStart(Player currentPlayer)
         {
             currentPlayer.State = PlayerState.DayVoting;
-
+            var killMessage = gameSetting.GeneralMessages.GetKillMessage(gameState
+                .KilledAtNightPlayers
+                .Where(x => x.Id != gameState.HealedPlayer?.Id)
+                .Select(x => x.Name).ToList());
+            
             return new UserResponse
             {
-                Title = gameSetting
-                            .GeneralMessages
-                            .GetKillMessage(gameState
-                                .AboutToKillPlayers
-                                .Where(x => x.Id != gameState.HealedPlayer?.Id)
-                                .Select(x => x.Name).ToList())
-                        + gameSetting.GeneralMessages.DayVotingMessage,
+                Title = $"{killMessage}. {gameSetting.GeneralMessages.DayVotingMessage}",
                 Buttons = gameState.AlivePlayers
                     .Where(x => x.Id != currentPlayer.Id && x.Id != gameState.PlayerWithAlibi?.Id)
                     .ToDictionary(keySelector: player => player.Id, elementSelector: player => player.Name)
@@ -125,8 +128,13 @@ namespace AliceMafia
             if (gameState.Voting.totalVoteCounter == gameState.AlivePlayers.Count)
             {
                 gameState.TimeOfDay = TimeOfDay.Night;
-                gameState.Clear();
-                return new UserResponse {Title = "завершить день"};
+                gameState.DaysCounter++;
+                
+                var votingResult = gameState.Voting.GetResult();
+                if (votingResult.Count == 1)
+                    gameState.AlivePlayers.Remove(votingResult.First());
+                
+                return new UserResponse {Title = gameSetting.GeneralMessages.DayEndMessage};
             }
 
             return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
@@ -135,29 +143,40 @@ namespace AliceMafia
         private UserResponse HandleFirstDay(Player currentPlayer)
         {
             currentPlayer.State = PlayerState.DayWaiting;
+            string roleName;
             if (gameState.AlivePlayers.Count(player => player.State == PlayerState.DayWaiting) == gameState.AlivePlayers.Count)
             {
                 gameState.TimeOfDay = TimeOfDay.Night;
-                gameState.IsFirstDay = false;
-                return new UserResponse {Title = gameSetting.GeneralMessages.DayEndMessage};
+                gameState.DaysCounter++;
+                roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
+                return new UserResponse {Title = $"Ваша роль {roleName}"};
             }
 
-            var roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
+            roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
             return new UserResponse {Title = $"Ваша роль {roleName}"};
         }
 
         private UserResponse ProcessRequestWhileNight(UserRequest userRequest)
         {
+            var gameOver = CheckGameOver();
+            if (gameOver.IsGameOver)
+                return gameOver;
+            
             var currentPlayer = GetPlayerById(userRequest.UserId);
             
             if (!gameState.AlivePlayers.Contains(currentPlayer))
                 return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
             
-            var currentPriority = currentPlayer.Role.Priority;
+            if (gameState.AlivePlayers.All(player => player.State != PlayerState.DayWaiting))
+                gameState.Clear();
+
+            if (currentPlayer.State == PlayerState.DayWaiting && gameState.DaysCounter != 1)
+                return HandleDayResult(userRequest);
             
+            var currentPriority = currentPlayer.Role.Priority;
             if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn)
             {
-                currentPlayer.State = PlayerState.NightWaiting;
+                currentPlayer.State = PlayerState.NightWaiting; // можно убрать наверное
                 return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
             
@@ -184,14 +203,16 @@ namespace AliceMafia
                 if (nextPriority == 0)
                 {
                     gameState.TimeOfDay = TimeOfDay.Day;
+                    foreach (var player in gameState.AlivePlayers)
+                        player.State = PlayerState.NightWaiting;
                     var mafiaVoteResult = gameState.Voting.GetResult();
                     if (mafiaVoteResult.Count == 1)
-                        gameState.AboutToKillPlayers.Add(mafiaVoteResult.First());
+                        gameState.KilledAtNightPlayers.Add(mafiaVoteResult.First());
                     gameState.Voting = new Vote<Player>();
                     nextPriority = 1;
                     if (gameState.HealedPlayer != null)
-                        gameState.AboutToKillPlayers.Remove(gameState.HealedPlayer);
-                    gameState.AlivePlayers.ExceptWith(gameState.AboutToKillPlayers);
+                        gameState.KilledAtNightPlayers.Remove(gameState.HealedPlayer);
+                    gameState.AlivePlayers.ExceptWith(gameState.KilledAtNightPlayers);
                 }
 
                 gameState.WhoseTurn = nextPriority;
@@ -220,6 +241,34 @@ namespace AliceMafia
                     .ToDictionary(keySelector: player => player.Id, elementSelector: player => player.Name)
             };
         }
+
+        private UserResponse HandleDayResult(UserRequest request)
+        {
+            var currentPlayer = GetPlayerById(request.UserId);
+            currentPlayer.State = PlayerState.NightWaiting;
+            var voteResult = gameState.DayVotingResult;
+            if (voteResult.Count == 1)
+            {
+                var jailedPlayer = voteResult.First();
+                return new UserResponse { Title = gameSetting.GeneralMessages.GetJailMessage(jailedPlayer.Name) };
+            }
+
+            return new UserResponse { Title = gameSetting.GeneralMessages.UndecidedJailMessage };
+        }
+
+        private UserResponse CheckGameOver()
+        {
+            var mafiaPlayersCount = gameState.AlivePlayers.Count(player => player.Role is Mafia);
+            var peacefulPlayersCount = gameState.AlivePlayers.Count(player => !(player.Role is Mafia));
+
+            if (peacefulPlayersCount == mafiaPlayersCount)
+                return new UserResponse {Title = gameSetting.GeneralMessages.MafiaWinMessage, IsGameOver = true};
+            if (mafiaPlayersCount == 0)
+                return new UserResponse {Title = gameSetting.GeneralMessages.PeacefulWinMessage, IsGameOver = true};
+            
+            return new UserResponse {IsGameOver = false};
+        }
+        
 
         public UserResponse ProcessUserRequest(UserRequest request)
         {
