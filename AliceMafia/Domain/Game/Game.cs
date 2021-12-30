@@ -15,7 +15,7 @@ namespace AliceMafia
     {
         private IGameSetting gameSetting;
         private RoleFactoryBase roleFactory;
-        public GameState gameState;
+        private GameState gameState;
         public List<Player> Players { get; }
 
         public Game(IGameSetting gameSetting)
@@ -26,14 +26,6 @@ namespace AliceMafia
             Players = new List<Player>();
         }
 
-        public Game()
-        {
-            gameSetting = new DefaultGameSetting();
-            gameState = new GameState();
-            roleFactory = new RoleFactory(gameState);
-            Players = new List<Player>();
-        }
-        
         public void AddPlayer(string id, string name)
         {
             Players.Add(new Player(id, name));
@@ -56,15 +48,14 @@ namespace AliceMafia
 
             var roles = new List<RoleBase>
             {
-                roleFactory.CreateMafia(), roleFactory.CreateCourtesan(), roleFactory.CreateSheriff(),
-                roleFactory.CreateDoctor(),
-                roleFactory.CreateMafia()
+                roleFactory.CreateRole<Mafia>(), roleFactory.CreateRole<Courtesan>(), roleFactory.CreateRole<Sheriff>(),
+                roleFactory.CreateRole<Doctor>(), roleFactory.CreateRole<Mafia>()
             };
 
             for (var j = 0; j < 2 + (playersCopyList.Count + 1) % 2; j++)
             {
                 var civilian = playersCopyList[random.Next(playersCopyList.Count)];
-                civilian.Role = roleFactory.CreateCivilian();
+                civilian.Role = roleFactory.CreateRole<Civilian>();
                 playersCopyList.Remove(civilian);
             }
 
@@ -246,7 +237,7 @@ namespace AliceMafia
         {
             var currentPlayer = GetPlayerById(request.UserId);
             currentPlayer.State = PlayerState.NightWaiting;
-            var voteResult = gameState.DayVotingResult;
+            var voteResult = gameState.Voting.GetResult();
             if (voteResult.Count == 1)
             {
                 var jailedPlayer = voteResult.First();

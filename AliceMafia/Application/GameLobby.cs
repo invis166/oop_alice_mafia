@@ -10,7 +10,7 @@ namespace AliceMafia.Application
         public string Id { get; set; }
         public bool GameStarted { get; set; }
         public int PlayersCount => game.Players.Count;
-        private Game game = new Game();
+        private IGame game;
 
         public void AddPlayer(string id, string name)
         {
@@ -45,14 +45,15 @@ namespace AliceMafia.Application
                 State = new StateModel
                 {
                     GameId = request.State.Session.GameId,
-                    DgState = request.State.Session.DgState
+                    DialogState = request.State.Session.DialogState
                 }
             };
         }
 
-        public GameLobby()
+        public GameLobby(IGame game)
         {
             Id = Math.Abs(DateTime.Now.GetHashCode()).ToString()[..6];
+            this.game = game;
         }
     }
 }
