@@ -22,7 +22,23 @@ namespace AliceMafia
             }
 
             Assert.True(game.gameState.TimeOfDay == TimeOfDay.Night);
-            Assert.False(game.gameState.IsFirstDay);
+            Assert.True(game.gameState.DaysCounter != 0);
+        }
+
+        [TestCase(6)]
+        [TestCase(5)]
+        [TestCase(4)]
+        public void TestSecondDayVoteKillPlayers(int playersCount)
+        {
+            var game = InitializeGame(playersCount);
+            game.gameState.DaysCounter = 2;
+
+            var mafia = game.gameState.AlivePlayers.First(x => x.Role is Mafia);
+            foreach (var player in game.gameState.AlivePlayers)
+                game.ProcessUserRequest(new UserRequest {UserId = player.Id, Payload = mafia.Id});
+            
+            Assert.True(game.gameState.TimeOfDay == TimeOfDay.Night);
+            Assert.IsEmpty(game.gameState.AlivePlayers.Where(player => player.Id == mafia.Id));
         }
         
         [TestCase]
