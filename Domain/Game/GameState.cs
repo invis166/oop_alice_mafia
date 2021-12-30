@@ -39,6 +39,7 @@ namespace AliceMafia
         {
             HealedPlayer = default;
             PlayerWithAlibi = default;
+            CheckedBySheriff = default;
             Voting = new Vote<Player>();
             AboutToKillPlayers.Clear();
         }
