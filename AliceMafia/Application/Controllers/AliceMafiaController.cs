@@ -4,8 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using AliceMafia.Application;
+using AliceMafia.Infrastructure;
+using AliceMafia.Setting.DefaultSetting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Ninject;
+using Ninject.Parameters;
 
 namespace AliceMafia.Controllers
 {
@@ -14,12 +18,6 @@ namespace AliceMafia.Controllers
     public class HelloWorldController : ControllerBase
     {
         private static ConcurrentDictionary<string, GameLobby> lobbies = new ConcurrentDictionary<string, GameLobby>();
-
-        [HttpGet]
-        public string HelloWord()
-        {
-            return "Hello, World!";
-        }
 
         private AliceResponse CreateResponse(DialogState dialogState, List<ButtonModel> buttons = null,
             string name = "", string responseText = "", string gameId = null)
@@ -33,7 +31,7 @@ namespace AliceMafia.Controllers
                 },
                 State = new StateModel
                 {
-                    DgState = dialogState,
+                    DialogState = dialogState,
                     Name = name,
                     GameId = gameId
                 }
@@ -44,11 +42,12 @@ namespace AliceMafia.Controllers
             buttonTexts.Select(buttonText => new ButtonModel {Title = buttonText}).ToList();
 
 
+        [HttpPost]
         public AliceResponse AlicePost(AliceRequest request)
         {
             var gameId = request.State.Session.GameId;
 
-            switch (request.State.Session.DgState)
+            switch (request.State.Session.DialogState)
             {
                 case DialogState.StartState:
                     return CreateResponse(DialogState.WriteName,
@@ -69,32 +68,18 @@ namespace AliceMafia.Controllers
                 case DialogState.GameStartState:
                 {
                     var todo = request.Request.Command;
-                    var buttons = new List<ButtonModel>();
                     if (todo.Contains("создать комнату"))
-                    {
-                        var lobby = new GameLobby();
-                        lobbies[lobby.Id] = lobby;
-                            lobby.AddPlayer(request.Session.SessionId,
-                            request.State.Session.Name); // todo надо заменить sessionid на userid
-
-                        buttons.Add(new ButtonModel {Title = "Начать игру!"});
-                        return CreateResponse(DialogState.StartMafia, buttons,
-                            responseText:
-                            $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
-                            gameId: lobby.Id);
-                    }
+                        return CreateLobby(request);
 
                     if (todo.Contains("присоединиться к игре"))
-                    {
                         return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
                             responseText: "Введите номер комнаты:");
-                    }
 
-                    buttons.Concat(new List<ButtonModel>
+                    var buttons = new List<ButtonModel>
                     {
                         new ButtonModel {Title = "Создать комнату"},
                         new ButtonModel {Title = "Присоединиться к игре"}
-                    });
+                    };
                     return CreateResponse(DialogState.GameStartState, buttons, request.Request.Command,
                         "Очень содержательно, но я вас не поняла. Выберите, что вы хотите сделать.");
                 }
@@ -172,6 +157,22 @@ namespace AliceMafia.Controllers
                         },
                     };
             }
+        }
+
+        private AliceResponse CreateLobby(AliceRequest request)
+        {
+            var kernel = new StandardKernel(new ServiceModule());
+            var lobby = new GameLobby(kernel.Get<Game>(new ConstructorArgument("gameSetting", new DefaultGameSetting())));
+            
+            lobbies[lobby.Id] = lobby;
+            lobby.AddPlayer(request.Session.SessionId,
+                request.State.Session.Name); // todo надо заменить sessionid на userid
+
+            var buttons = CreateButtonList(new List<string> {"Начать игру!"});
+            return CreateResponse(DialogState.StartMafia, buttons,
+                responseText:
+                $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
+                gameId: lobby.Id);
         }
     }
 }
