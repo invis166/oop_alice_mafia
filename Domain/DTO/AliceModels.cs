@@ -81,7 +81,7 @@ namespace AliceMafia
         public string OriginalUtterance { get; set; }
 
         [JsonProperty("payload")] 
-        public JObject Payload { get; set; }
+        public PayloadModel Payload { get; set; }
     }
 
     public class SessionModel
@@ -120,7 +120,7 @@ namespace AliceMafia
         public string Title { get; set; }
 
         [JsonProperty("payload")] 
-        public object Payload { get; set; }
+        public PayloadModel Payload { get; set; }
 
         [JsonProperty("url")] 
         public string Url { get; set; }
@@ -146,5 +146,11 @@ namespace AliceMafia
     {
         [JsonProperty("session")]
         public StateModel Session { get; set; }
+    }
+
+    public class PayloadModel
+    {
+        [JsonProperty("user_id")]
+        public string UserId { get; set; }
     }
 }
