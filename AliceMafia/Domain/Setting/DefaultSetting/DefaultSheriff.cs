@@ -2,7 +2,7 @@ namespace AliceMafia.Setting.DefaultSetting
 {
     public class DefaultSheriff : IRoleSetting
     {
-        public string Name { get; }
-        public string NightActionMessage { get; }
+        public string Name => "Шериф";
+        public string NightActionMessage => "Выберите, к кому нанести визит";
     }
 }

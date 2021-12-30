@@ -2,7 +2,7 @@ namespace AliceMafia.Setting.DefaultSetting
 {
     public class DefaultDoctor : IRoleSetting
     {
-        public string Name { get; }
-        public string NightActionMessage { get; }
+        public string Name => "Доктор";
+        public string NightActionMessage => "Выберите, кого вылечить";
     }
 }

@@ -18,7 +18,7 @@ namespace AliceMafia.Setting.DefaultSetting
                 ["Doctor"] = new DefaultDoctor(),
                 ["Mafia"] = new DefaultMafia(),
                 ["Sheriff"] = new DefaultSheriff(),
-                ["Courtesan"] = new DefaulttCourtesan()
+                ["Courtesan"] = new DefaultCourtesan()
             };
         }
     }
