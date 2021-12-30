@@ -162,7 +162,7 @@ namespace AliceMafia.Controllers
         private AliceResponse CreateLobby(AliceRequest request)
         {
             var kernel = new StandardKernel(new ServiceModule());
-            var lobby = new GameLobby(kernel.Get<Game>(new ConstructorArgument("gameSetting", new DefaultGameSetting())));
+            var lobby = new GameLobby(kernel.Get<IGame>(new ConstructorArgument("gameSetting", new DefaultGameSetting())));
             
             lobbies[lobby.Id] = lobby;
             lobby.AddPlayer(request.Session.SessionId,
