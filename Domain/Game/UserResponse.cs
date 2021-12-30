@@ -5,6 +5,6 @@ namespace AliceMafia
     public class UserResponse
     {
         public string Title;
-        public IList<string> Buttons;
+        public Dictionary<string, string> Buttons;
     }
 }
