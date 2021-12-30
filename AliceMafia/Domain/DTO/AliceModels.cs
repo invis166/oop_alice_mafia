@@ -136,7 +136,7 @@ namespace AliceMafia
         
         [JsonConverter(typeof(StringEnumConverter))] 
         [JsonProperty("dialog_state")] 
-        public DialogState DgState { get; set; }
+        public DialogState DialogState { get; set; }
         
         [JsonProperty("player_name")] 
         public string Name { get; set; }
