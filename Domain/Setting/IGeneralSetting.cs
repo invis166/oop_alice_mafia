@@ -4,10 +4,12 @@ namespace AliceMafia.Setting
 {
     public interface IGeneralSetting
     {
-        public string GameStartMessage { get; }
+        public string DeathMessage { get; }
         public string DayVotingMessage { get; }
         public string DayWaitingMessage { get; }
         public string NightWaitingMessage { get; }
+        public string UndecidedJailMessage { get; }
+        public string DayEndMessage { get; }
         public string GetKillMessage(List<string> names);
         public string GetJailMessage(string name);
     }

@@ -2,7 +2,7 @@ namespace AliceMafia.Setting.DefaultSetting
 {
     public class DefaultCivilian : IRoleSetting
     {
-        public string Name { get; }
-        public string NightActionMessage { get; }
+        public string Name => "Мирный житель";
+        public string NightActionMessage => "Вы спите.";
     }
 }
