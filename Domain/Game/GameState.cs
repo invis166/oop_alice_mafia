@@ -39,7 +39,6 @@ namespace AliceMafia
         {
             HealedPlayer = default;
             PlayerWithAlibi = default;
-            AlivePlayers.ExceptWith(AboutToKillPlayers.ToHashSet());
             Voting = new Vote<Player>();
             AboutToKillPlayers.Clear();
         }

@@ -4,7 +4,7 @@
     {
         public string Id { get;  }
         public string Name { get; }
-        public RoleBase Role { get; }
+        public RoleBase Role { get; set; }
         public PlayerState State { get; set; }
         public bool HasVoted { get; set; }
 
@@ -12,6 +12,7 @@
         {
             Id = id;
             Name = name;
+            State = PlayerState.DayVoting;
         }
     }
 }

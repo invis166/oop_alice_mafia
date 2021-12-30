@@ -2,7 +2,7 @@
 {
     public class UserRequest
     {
-        public string data;
-        public string id;
+        public string Data;
+        public string UserId;
     }
 }

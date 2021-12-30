@@ -13,6 +13,7 @@ namespace AliceMafia
     public class Game : IGame
     {
         private IGameSetting gameSetting;
+        private RoleFactoryBase roleFactory;
         private GameState gameState;
         public List<Player> Players { get; }
 
@@ -20,12 +21,16 @@ namespace AliceMafia
         {
             this.gameSetting = gameSetting;
             gameState = new GameState();
+            roleFactory = new RoleFactory(gameState);
+            Players = new List<Player>();
         }
 
         public Game()
         {
             gameSetting = new DefaultGameSetting();
             gameState = new GameState();
+            roleFactory = new RoleFactory(gameState);
+            Players = new List<Player>();
         }
         
         public void AddPlayer(string id, string name)
@@ -36,46 +41,67 @@ namespace AliceMafia
         //todo
         public void StartGame()
         {
+            SetRoles();
+            foreach (var player in Players)
+                gameState.AlivePlayers.Add(player);
+        }
+
+        private void SetRoles()
+        {
             var playersCopyArray = new Player[Players.Count];
             Players.CopyTo(playersCopyArray);
             var playersCopyList = playersCopyArray.ToList();
             var random = new Random();
-            // распределить роли
-            // запустить игру
-            if (Players.Count < 8)
+
+            var roles = new List<RoleBase>
             {
-                var mafia = Players[random.Next(Players.Count)];
-                Players.Remove(mafia);
-               
+                roleFactory.CreateMafia(), roleFactory.CreateCourtesan(), roleFactory.CreateSheriff(),
+                roleFactory.CreateDoctor(),
+                roleFactory.CreateMafia()
+            };
+
+            for (var j = 0; j < 2 + (playersCopyList.Count + 1) % 2; j++)
+            {
+                var civilian = playersCopyList[random.Next(playersCopyList.Count)];
+                civilian.Role = roleFactory.CreateCivilian();
+                playersCopyList.Remove(civilian);
             }
-            else
+
+            while (playersCopyList.Count > 0)
             {
-                
+                var player = playersCopyList[random.Next(playersCopyList.Count)];
+                player.Role = roles[^1];
+                roles.RemoveAt(roles.Count - 1);
+                playersCopyList.Remove(player);
             }
         }
 
         private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
         {
-            var currentPlayer = GetPlayerById(userRequest.id);
+            var currentPlayer = GetPlayerById(userRequest.UserId);
             if (!gameState.AlivePlayers.Contains(currentPlayer))
-                return new UserResponse {Title = "Чел ты в гробе"};
-            currentPlayer.HasVoted = false;
+                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
+            
+            if (currentPlayer.State == PlayerState.DayWaiting)
+                return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
+            
 
             if (gameState.IsFirstDay)
             {
-                if (gameState.AlivePlayers.Count(player => player.HasVoted) == gameState.AlivePlayers.Count)
+                currentPlayer.State = PlayerState.DayWaiting;
+                if (gameState.AlivePlayers.Count(player => player.State == PlayerState.DayWaiting) == gameState.AlivePlayers.Count)
                 {
                     gameState.TimeOfDay = TimeOfDay.Night;
-                    gameState.IsFirstDay = false;
-                    return new UserResponse {Title = "завершить день"};
+                    return new UserResponse {Title = gameSetting.GeneralMessages.DayEndMessage};
                 }
-                currentPlayer.HasVoted = true;
-                return new UserResponse {Title = gameSetting.GeneralMessages.GameStartMessage};
+                var roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
+                return new UserResponse {Title = $"Ваша роль {roleName}"};
             }
+            
             
             if (currentPlayer.State == PlayerState.DayVoting)
             {
-                gameState.Voting.AddVote(GetPlayerById(userRequest.data));
+                gameState.Voting.AddVote(GetPlayerById(userRequest.Data));
                 currentPlayer.State = PlayerState.DayWaiting;
 
                 if (gameState.Voting.totalVoteCounter == gameState.AlivePlayers.Count)
@@ -112,11 +138,11 @@ namespace AliceMafia
 
         private UserResponse ProcessRequestWhileNight(UserRequest userRequest)
         {
-            var currentPlayer = GetPlayerById(userRequest.id);
+            var currentPlayer = GetPlayerById(userRequest.UserId);
             if (!gameState.AlivePlayers.Contains(currentPlayer))
-                return new UserResponse {Title = "Чел ты в гробе"};
+                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
             var currentPriority = currentPlayer.Role.Priority;
-            if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn || currentPlayer.State == PlayerState.DayWaiting)
+            if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn)
             {
                 currentPlayer.State = PlayerState.NightWaiting;
                 return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
@@ -124,7 +150,7 @@ namespace AliceMafia
             
             if (currentPlayer.State == PlayerState.NightAction)
             {
-                currentPlayer.Role.NightAction.DoAction(GetPlayerById(userRequest.data));
+                currentPlayer.Role.NightAction.DoAction(GetPlayerById(userRequest.Data));
                 currentPlayer.State = PlayerState.NightWaiting;
                 currentPlayer.HasVoted = true;
                 if (currentPlayer.Role is Sheriff)

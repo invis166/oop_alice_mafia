@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 
 namespace AliceMafia.Application
@@ -23,7 +25,29 @@ namespace AliceMafia.Application
         
         public AliceResponse HandleRequest(AliceRequest request)
         {
-            throw new NotImplementedException();
+            var userRequest = new UserRequest {UserId = request.Session.SessionId, Data = request.Request.Command}; // todo заменить SessionId на UserId
+            var userResponse = game.ProcessUserRequest(userRequest);
+
+            List<ButtonModel> buttons;
+            if (userResponse.Buttons is null)
+                buttons = new List<ButtonModel> {new ButtonModel {Title = "Далее"}};
+            else
+                buttons = userResponse.Buttons
+                    .Select(btn => new ButtonModel {Title = btn})
+                    .ToList();
+            return new AliceResponse
+            {
+                Response = new ResponseModel
+                {
+                    Text = userResponse.Title,
+                    Buttons = buttons
+                },
+                State = new StateModel
+                {
+                    GameId = request.State.Session.GameId,
+                    DgState = request.State.Session.DgState
+                }
+            };
         }
 
         public GameLobby()
