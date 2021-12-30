@@ -13,6 +13,8 @@ namespace AliceMafia.Setting.DefaultSetting
         public string NightWaitingMessage => "Ожидайте начала дня.";
         public string UndecidedJailMessage => "Игроки не пришли к единогласному решению на дневном голосовании.";
         public string DayEndMessage => "День окончен.";
+        public string MafiaWinMessage => "Мафия победила.";
+        public string PeacefulWinMessage => "Мирные жители победили.";
 
         public string GetKillMessage(List<string> names)
         {

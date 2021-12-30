@@ -10,6 +10,8 @@ namespace AliceMafia.Setting
         public string NightWaitingMessage { get; }
         public string UndecidedJailMessage { get; }
         public string DayEndMessage { get; }
+        public string MafiaWinMessage { get; }
+        public string PeacefulWinMessage { get; }
         public string GetKillMessage(List<string> names);
         public string GetJailMessage(string name);
     }

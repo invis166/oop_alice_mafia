@@ -6,5 +6,6 @@ namespace AliceMafia
     {
         public string Title;
         public Dictionary<string, string> Buttons;
+        public bool IsGameOver = false;
     }
 }
