@@ -1,4 +1,8 @@
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using AliceMafia.Setting;
+using AliceMafia.Setting.DefaultSetting;
 using NUnit.Framework;
 
 namespace AliceMafia
@@ -12,17 +16,18 @@ namespace AliceMafia
         public void TestFirstDayEnds(int playersCount)
         {
             var game = InitializeGame(playersCount);
+            var gameState = GetGameState(game);
             
             // узнаем свои роли
             for (var j = 0; j < playersCount; j++)
             {
                 game.ProcessUserRequest(new UserRequest {Data = null, UserId = j.ToString()});
-                var player = game.gameState.AlivePlayers.First(plr => plr.Id == j.ToString());
+                var player = gameState.AlivePlayers.First(plr => plr.Id == j.ToString());
                 Assert.True(player.State == PlayerState.DayWaiting);
             }
 
-            Assert.True(game.gameState.TimeOfDay == TimeOfDay.Night);
-            Assert.True(game.gameState.DaysCounter != 0);
+            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
+            Assert.True(gameState.DaysCounter != 0);
         }
 
         [TestCase(6)]
@@ -31,44 +36,108 @@ namespace AliceMafia
         public void TestSecondDayVoteKillPlayers(int playersCount)
         {
             var game = InitializeGame(playersCount);
-            game.gameState.DaysCounter = 2;
+            var gameState = GetGameState(game);
+            gameState.DaysCounter = 2;
 
-            var mafia = game.gameState.AlivePlayers.First(x => x.Role is Mafia);
-            foreach (var player in game.gameState.AlivePlayers)
+            var mafia = gameState.AlivePlayers.First(x => x.Role is Mafia);
+            foreach (var player in gameState.AlivePlayers)
                 game.ProcessUserRequest(new UserRequest {UserId = player.Id, Payload = mafia.Id});
             
-            Assert.True(game.gameState.TimeOfDay == TimeOfDay.Night);
-            Assert.IsEmpty(game.gameState.AlivePlayers.Where(player => player.Id == mafia.Id));
+            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
+            Assert.IsNotEmpty(gameState.AlivePlayers);
+            Assert.IsEmpty(gameState.AlivePlayers.Where(player => player.Id == mafia.Id));
         }
-        
+
+        [TestCase(5)]
+        public void TestJailMessage(int playersCount)
+        {
+            
+            var game = InitializeGame(playersCount);
+            var gameState = GetGameState(game);
+            var gameSetting = GetGameSetting(game);
+
+            gameState.DaysCounter = 2;
+            var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
+            foreach (var player in gameState.AlivePlayers)
+                game.ProcessUserRequest(new UserRequest {UserId = player.Id, Payload = victim.Id});
+            
+            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
+            foreach (var player in gameState.AlivePlayers)
+            {
+                var response = game.ProcessUserRequest(new UserRequest {UserId = player.Id});
+                Assert.True(response.Title == gameSetting.GeneralMessages.GetJailMessage(victim.Name));
+            }
+
+        }
+
         [TestCase]
         public void TestThreePlayersMafiaKillAfterFirstNight()
         {
             var playersCount = 3;
             var game = InitializeGame(playersCount);
-            
-            SkipFirstDay(game);
-            
-            // переходим к ночи
-            UserResponse mafiaChoice = new UserResponse();
-            for (var j = 0; j < playersCount; j++)
-            {
-                if (game.Players.First(player => player.Name == j.ToString()).Role is Mafia)
-                    mafiaChoice = game.ProcessUserRequest(new UserRequest {Data = null, UserId = j.ToString()});
-            }
+            var gameState = GetGameState(game);
 
-            // выбираем жертву за мафию
-            var mafiaPlayer = game.Players.First(x => x.Role is Mafia);
-            var victim = mafiaChoice.Buttons.First().Key;
-            game.ProcessUserRequest(new UserRequest {UserId = mafiaPlayer.Id, Payload = victim});
+            gameState.DaysCounter = 1;
+            gameState.TimeOfDay = TimeOfDay.Night;
             
-            Assert.True(game.gameState.TimeOfDay == TimeOfDay.Day);
-            Assert.IsEmpty(game.gameState.AlivePlayers.Where(player => player.Id == victim));
+
+            var mafiaPlayer = game.Players.First(x => x.Role is Mafia);
+            var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
+            game.ProcessUserRequest(new UserRequest {UserId = mafiaPlayer.Id});
+            game.ProcessUserRequest(new UserRequest {UserId = mafiaPlayer.Id, Payload = victim.Id});
+            
+            Assert.True(gameState.TimeOfDay == TimeOfDay.Day);
+            Assert.IsEmpty(gameState.AlivePlayers.Where(player => player.Id == victim.Id));
         }
 
+        [TestCase(3, 2, 1, 0, 0, 0)]
+        [TestCase(4, 3, 1, 0, 0, 0)]
+        [TestCase(5, 2, 1, 1, 1, 0)]
+        [TestCase(6, 3, 1, 1, 1, 0)] 
+        [TestCase(7, 2, 2, 1, 1, 1)]
+        [TestCase(8, 3, 2, 1, 1, 1)]
+        public void TestRolesDistribution(int playersCount, int civilianCount, int mafiaCount, int doctorCount, int sheriffCount, int courtesanCount)
+        {
+            var game = InitializeGame(playersCount);
+            var gameState = GetGameState(game);
+            
+            Assert.True(gameState.AlivePlayers.Count == playersCount);
+            Assert.True(gameState.AlivePlayers.Count(player => player.Role is Civilian) == civilianCount);
+            Assert.True(gameState.AlivePlayers.Count(player => player.Role is Mafia) == mafiaCount);
+            Assert.True(gameState.AlivePlayers.Count(player => player.Role is Doctor) == doctorCount);
+            Assert.True(gameState.AlivePlayers.Count(player => player.Role is Sheriff) == sheriffCount);
+            Assert.True(gameState.AlivePlayers.Count(player => player.Role is Courtesan) == courtesanCount);
+        }
+
+        [TestCase]
+        public void TestDoctorHeals()
+        {
+            var playersCount = 5;
+            var game = InitializeGame(playersCount);
+            var gameState = GetGameState(game);
+
+            gameState.DaysCounter = 2;
+            gameState.TimeOfDay = TimeOfDay.Night;
+
+            var doctorPlayer = gameState.AlivePlayers.First(player => player.Role is Doctor);
+            var victim = gameState.AlivePlayers.First(player => player.Role is Civilian);
+            var mafiaPlayers = gameState.AlivePlayers.Where(player => player.Role is Mafia);
+            foreach (var player in gameState.AlivePlayers)
+                game.ProcessUserRequest(new UserRequest {UserId = player.Id});
+                
+            foreach (var mafia in mafiaPlayers)
+                game.ProcessUserRequest(new UserRequest {UserId = mafia.Id, Payload = victim.Id});
+
+            gameState.WhoseTurn = doctorPlayer.Role.Priority;
+            
+            //gameState.
+            //game.ProcessUserRequest(new UserRequest {UserId = doctorPlayer.Id, Payload = victim.Id});
+            
+        }
+        
         public static Game InitializeGame(int playersCount)
         {
-            var game = new Game();
+            var game = new Game(new DefaultGameSetting());
             for (var j = 0; j < playersCount; j++)
                 game.AddPlayer(j.ToString(), j.ToString());
             
@@ -77,12 +146,18 @@ namespace AliceMafia
             return game;
         }
 
-        public static void SkipFirstDay(Game game)
+        public static GameState GetGameState(Game game)
         {
-            foreach (var player in game.gameState.AlivePlayers)
-            {
-                game.ProcessUserRequest(new UserRequest {UserId = player.Id});
-            }
+            var field = game.GetType().GetField("gameState", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return (GameState) field.GetValue(game);
+        }
+
+        public static IGameSetting GetGameSetting(Game game)
+        {
+            var field = game.GetType().GetField("gameSetting", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return (IGameSetting) field.GetValue(game);
         }
     }
 }
