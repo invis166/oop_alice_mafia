@@ -2,9 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+using System.Reflection;
 using AliceMafia.Application;
 using AliceMafia.Infrastructure;
+using AliceMafia.Setting;
 using AliceMafia.Setting.DefaultSetting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -15,9 +16,46 @@ namespace AliceMafia.Controllers
 {
     [ApiController]
     [Route("/")]
-    public class HelloWorldController : ControllerBase
+    public class AliceMafiaController : ControllerBase
     {
         private static ConcurrentDictionary<string, GameLobby> lobbies = new ConcurrentDictionary<string, GameLobby>();
+        
+
+        private Dictionary<IGameSetting, string> FillSettings()
+        {
+            var settingsConstructorInfos = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(IGameSetting)) && t.Namespace.Contains("AliceMafia.Setting"))
+                .Select(t  => t.GetConstructor(Type.EmptyTypes))
+                .ToList();
+            
+
+            var result = new Dictionary<IGameSetting, string>();
+            foreach (var settingsConstructor in settingsConstructorInfos)
+            {
+                var setting = (IGameSetting)settingsConstructor.Invoke(new object[0]);
+                result[setting] = setting.SettingName;
+            }
+
+            return result;
+        }
+
+        private Dictionary<string, IGameSetting> FillInverseSettings()
+        {
+            var settingsConstructorInfos = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(IGameSetting)) && t.Namespace.Contains("AliceMafia.Setting"))
+                .Select(t  => t.GetConstructor(Type.EmptyTypes))
+                .ToList();
+            
+
+            var result = new Dictionary<string, IGameSetting>();
+            foreach (var settingsConstructor in settingsConstructorInfos)
+            {
+                var setting = (IGameSetting)settingsConstructor.Invoke(new object[0]);
+                result[setting.SettingName] = setting;
+            }
+
+            return result;
+        }
 
         private AliceResponse CreateResponse(DialogState dialogState, List<ButtonModel> buttons = null,
             string name = "", string responseText = "", string gameId = null)
@@ -38,7 +76,7 @@ namespace AliceMafia.Controllers
             };
         }
 
-        private List<ButtonModel> CreateButtonList(List<string> buttonTexts) =>
+        private List<ButtonModel> CreateButtonList(params string[] buttonTexts) =>
             buttonTexts.Select(buttonText => new ButtonModel {Title = buttonText}).ToList();
 
 
@@ -54,62 +92,22 @@ namespace AliceMafia.Controllers
                         responseText: "Привет! В этом навыке вы сможете сыграть в Мафию. Как вас зовут?");
 
                 case DialogState.WriteName:
-                {
-                    var buttons = new List<ButtonModel>
-                    {
-                        new ButtonModel {Title = "Создать комнату"},
-                        new ButtonModel {Title = "Присоединиться к игре"}
-                    };
-
-                    return CreateResponse(DialogState.GameStartState, buttons, request.Request.Command,
+                    return CreateResponse(DialogState.GameStartState,
+                        CreateButtonList("Создать комнату", "Присоединиться к игре"),
+                        request.Request.Command,
                         "Отлично! Теперь можно играть. Выберите, что вы хотите сделать.");
-                }
 
+                case DialogState.SettingSelection:
+                    return ProcessSettingselection(request);
+                
                 case DialogState.GameStartState:
-                {
-                    var todo = request.Request.Command;
-                    if (todo.Contains("создать комнату"))
-                        return CreateLobby(request);
-
-                    if (todo.Contains("присоединиться к игре"))
-                        return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
-                            responseText: "Введите номер комнаты:");
-
-                    var buttons = new List<ButtonModel>
-                    {
-                        new ButtonModel {Title = "Создать комнату"},
-                        new ButtonModel {Title = "Присоединиться к игре"}
-                    };
-                    return CreateResponse(DialogState.GameStartState, buttons, request.Request.Command,
-                        "Очень содержательно, но я вас не поняла. Выберите, что вы хотите сделать.");
-                }
+                    return ProcessLobbyStarting(request);
+                
+                case DialogState.CreateLobby:
+                    return CreateLobby(request);
 
                 case DialogState.StartMafia:
-                {
-                    var buttons = new List<ButtonModel>();
-                    if (!request.Request.Command.Contains("начать игру"))
-                    {
-                        buttons.Add(new ButtonModel {Title = "Начать игру!"});
-                        return CreateResponse(DialogState.StartMafia, buttons,
-                            responseText:
-                            $"Мне жаль, я не говорю на испанском. Номер комнаты: {gameId}." +
-                            " Когда все игроки присоединятся, нажмите \"Начать игру!\".",
-                            gameId: gameId);
-                    }
-
-                    var players = lobbies[gameId].PlayersCount;
-                    buttons.Add(new ButtonModel {Title = "Начать игру!"});
-                    if (players < 3)
-                    {
-                        return CreateResponse(DialogState.StartMafia, buttons,
-                            responseText: $"Для игры нужно минимум трое. Пока что присоединилось всего {players}.",
-                            gameId: gameId);
-                    }
-
-                    lobbies[gameId].StartGame();
-
-                    return CreateResponse(DialogState.InGame, responseText: "Игра началась!", gameId: gameId);
-                }
+                    return ProcessMafiaStarting(request, gameId);
 
                 case DialogState.WriteLobby when !lobbies.ContainsKey(request.Request.Command):
                     return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
@@ -117,21 +115,20 @@ namespace AliceMafia.Controllers
 
                 case DialogState.WriteLobby when lobbies[request.Request.Command].GameStarted:
                     return CreateResponse(DialogState.GameStartState,
-                        CreateButtonList(new List<string> {"Создать комнату", "Присоединиться к игре"}),
+                        CreateButtonList("Создать комнату", "Присоединиться к игре"),
                         responseText:
                         "Игра уже начата. К сожалению, так выпала карта." +
                         " Попробуйте начать свою игру или присоединиться к другой.",
                         name: request.State.Session.Name);
 
                 case DialogState.WriteLobby:
-                    lobbies[request.Request.Command].AddPlayer(request.Session.SessionId, request.State.Session.Name); // todo заменить sessionId на UserId
-
-                    return CreateResponse(DialogState.Wait, CreateButtonList(new List<string> {"Начать игру!"}),
+                    lobbies[request.Request.Command].AddPlayer(request.Session.SessionId, request.State.Session.Name);
+                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
                         responseText: "Вы успешно присоединились к игре. Ожидайте начала!",
                         gameId: request.Request.Command);
 
                 case DialogState.Wait when !request.Request.Command.Contains("начать игру"):
-                    return CreateResponse(DialogState.Wait, CreateButtonList(new List<string> {"Начать игру!"}),
+                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
                         responseText: "Я бы хотела понять вас, но я всего лишь студенческий проект. Ожидайте начала!",
                         gameId: gameId);
 
@@ -139,7 +136,7 @@ namespace AliceMafia.Controllers
                     return CreateResponse(DialogState.InGame, responseText: "Игра началась!", gameId: gameId);
 
                 case DialogState.Wait:
-                    return CreateResponse(DialogState.Wait, CreateButtonList(new List<string> {"Начать игру!"}),
+                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
                         responseText: "Игра еще не началась, подождите.",
                         gameId: gameId);
 
@@ -147,29 +144,81 @@ namespace AliceMafia.Controllers
                     return lobbies[request.State.Session.GameId].HandleRequest(request);
 
                 default:
-                    return new AliceResponse
-                    {
-                        Response = new ResponseModel
-                        {
-                            Text = "[Пасхальная система пасхалок]\nПоздравляем!\nВы нашли пасхалку!\n" +
-                                   "Пожалуйста напишите в телеграм разработчиков, чтобы получить свой приз\n" +
-                                   "@dattebayob"
-                        },
-                    };
+                    return CreateResponse(DialogState.EasterEgg,
+                        responseText:
+                        "[Пасхальная система пасхалок]\nПоздравляем!\nВы нашли пасхалку!\n" +
+                        "Пожалуйста напишите в тг разработчиков, чтобы получить свой приз\n" +
+                        "@xoposhiy");
             }
+        }
+
+        private AliceResponse ProcessSettingselection(AliceRequest request)
+        {
+            var settings = FillSettings();
+            var buttons = CreateButtonList(settings.Keys.Select(key => settings[key]).ToArray());
+            
+            return CreateResponse(DialogState.CreateLobby, buttons, request.State.Session.Name,
+                "Пожалуйста, выберите сеттинг для лобби");
+        }
+
+        private AliceResponse ProcessLobbyStarting(AliceRequest request)
+        {
+            var todo = request.Request.Command;
+            if (todo.Contains("создать комнату"))
+                return ProcessSettingselection(request);
+
+            if (todo.Contains("присоединиться к игре"))
+                return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
+                    responseText: "Введите номер комнаты:");
+
+            return CreateResponse(DialogState.GameStartState,
+                CreateButtonList("Создать комнату", "Присоединиться к игре"),
+                request.Request.Command,
+                "Очень содержательно, но я вас не поняла. Выберите, что вы хотите сделать.");
+        }
+
+        private AliceResponse ProcessMafiaStarting(AliceRequest request, string gameId)
+        {
+            if (!request.Request.Command.Contains("начать игру"))
+                return HandleInvalidText(gameId);
+
+            var players = lobbies[gameId].PlayersCount;
+
+            if (players < 3)
+            {
+                return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
+                    responseText: $"Для игры нужно минимум трое. Пока что присоединилось всего {players}.",
+                    gameId: gameId);
+            }
+
+            lobbies[gameId].StartGame();
+
+            return CreateResponse(DialogState.InGame, responseText: "Игра началась!", gameId: gameId);
+        }
+
+        private AliceResponse HandleInvalidText(string gameId)
+        {
+            return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
+                responseText:
+                $"Мне жаль, я не говорю на испанском. Номер комнаты: {gameId}." +
+                " Когда все игроки присоединятся, нажмите \"Начать игру!\".",
+                gameId: gameId);
         }
 
         private AliceResponse CreateLobby(AliceRequest request)
         {
+            var inverseSettings = FillInverseSettings();
+            var todo = request.Request.Command;
+            var neededSetting = inverseSettings[todo];
+            
             var kernel = new StandardKernel(new ServiceModule());
-            var lobby = new GameLobby(kernel.Get<IGame>(new ConstructorArgument("gameSetting", new DefaultGameSetting())));
+            var lobby = new GameLobby(kernel.Get<IGame>(new ConstructorArgument("gameSetting", neededSetting)));
             
             lobbies[lobby.Id] = lobby;
             lobby.AddPlayer(request.Session.SessionId,
-                request.State.Session.Name); // todo надо заменить sessionid на userid
+                request.State.Session.Name);
 
-            var buttons = CreateButtonList(new List<string> {"Начать игру!"});
-            return CreateResponse(DialogState.StartMafia, buttons,
+            return CreateResponse(DialogState.SettingSelection, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
                 gameId: lobby.Id);

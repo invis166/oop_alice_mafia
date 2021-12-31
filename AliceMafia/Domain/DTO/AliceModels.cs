@@ -20,7 +20,10 @@ namespace AliceMafia
         WriteLobby,
         Wait,
         StartMafia,
-        InGame
+        InGame,
+        EasterEgg,
+        SettingSelection,
+        CreateLobby
     }
     
     public class AliceRequest

@@ -6,6 +6,7 @@ namespace AliceMafia.Setting.DefaultSetting
 {
     public class DefaultGameSetting : IGameSetting
     {
+        public string SettingName => "Стандартный сеттинг";
         public IGeneralSetting GeneralMessages { get; }
         public Dictionary<string, IRoleSetting> roles { get; }
 
