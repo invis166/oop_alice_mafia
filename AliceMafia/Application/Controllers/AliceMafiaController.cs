@@ -86,16 +86,16 @@ namespace AliceMafia.Controllers
             switch (request.State.Session.DialogState)
             {
                 case DialogState.DialogStart:
-                    return CreateResponse(DialogState.WriteName,
+                    return CreateResponse(DialogState.EnterName,
                         responseText: "Привет! В этом навыке вы сможете сыграть в Мафию. Как вас зовут?");
 
-                case DialogState.WriteName:
+                case DialogState.EnterName:
                     return CreateResponse(DialogState.JoinGame,
                         CreateButtonList("Создать комнату", "Присоединиться к игре"),
                         request.Request.Command,
                         "Отлично! Теперь можно играть. Выберите, что вы хотите сделать.");
 
-                case DialogState.SettingSelection:
+                case DialogState.SelectSetting:
                     return ProcessSettingselection(request);
                 
                 case DialogState.JoinGame:
@@ -104,14 +104,14 @@ namespace AliceMafia.Controllers
                 case DialogState.CreateLobby:
                     return CreateLobby(request);
 
-                case DialogState.StartGame:
+                case DialogState.HostStartGame:
                     return ProcessMafiaStarting(request, gameId);
 
-                case DialogState.WriteLobby when !lobbies.ContainsKey(request.Request.Command):
-                    return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
+                case DialogState.EnterLobby when !lobbies.ContainsKey(request.Request.Command):
+                    return CreateResponse(DialogState.EnterLobby, name: request.State.Session.Name,
                         responseText: "Такой игры нет:( Попробуйте снова! Введите номер комнаты:");
 
-                case DialogState.WriteLobby when lobbies[request.Request.Command].GameStarted:
+                case DialogState.EnterLobby when lobbies[request.Request.Command].GameStarted:
                     return CreateResponse(DialogState.JoinGame,
                         CreateButtonList("Создать комнату", "Присоединиться к игре"),
                         responseText:
@@ -119,22 +119,22 @@ namespace AliceMafia.Controllers
                         " Попробуйте начать свою игру или присоединиться к другой.",
                         name: request.State.Session.Name);
 
-                case DialogState.WriteLobby:
+                case DialogState.EnterLobby:
                     lobbies[request.Request.Command].AddPlayer(request.Session.SessionId, request.State.Session.Name);
-                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
+                    return CreateResponse(DialogState.WaitGameStart, CreateButtonList("Начать игру!"),
                         responseText: "Вы успешно присоединились к игре. Ожидайте начала!",
                         gameId: request.Request.Command);
 
-                case DialogState.Wait when !request.Request.Command.Contains("начать игру"):
-                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
+                case DialogState.WaitGameStart when !request.Request.Command.Contains("начать игру"):
+                    return CreateResponse(DialogState.WaitGameStart, CreateButtonList("Начать игру!"),
                         responseText: "Я бы хотела понять вас, но я всего лишь студенческий проект. Ожидайте начала!",
                         gameId: gameId);
 
-                case DialogState.Wait when lobbies[request.State.Session.GameId].GameStarted:
+                case DialogState.WaitGameStart when lobbies[request.State.Session.GameId].GameStarted:
                     return CreateResponse(DialogState.InGame, CreateButtonList("Далее"), responseText: "Игра началась!", gameId: gameId);
 
-                case DialogState.Wait:
-                    return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
+                case DialogState.WaitGameStart:
+                    return CreateResponse(DialogState.WaitGameStart, CreateButtonList("Начать игру!"),
                         responseText: "Игра еще не началась, подождите.",
                         gameId: gameId);
 
@@ -166,7 +166,7 @@ namespace AliceMafia.Controllers
                 return ProcessSettingselection(request);
 
             if (todo.Contains("присоединиться к игре"))
-                return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
+                return CreateResponse(DialogState.EnterLobby, name: request.State.Session.Name,
                     responseText: "Введите номер комнаты:");
 
             return CreateResponse(DialogState.JoinGame,
@@ -184,7 +184,7 @@ namespace AliceMafia.Controllers
 
             if (players < 3)
             {
-                return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
+                return CreateResponse(DialogState.HostStartGame, CreateButtonList("Начать игру!"),
                     responseText: $"Для игры нужно минимум трое. Пока что присоединилось всего {players}.",
                     gameId: gameId);
             }
@@ -196,7 +196,7 @@ namespace AliceMafia.Controllers
 
         private AliceResponse HandleInvalidText(string gameId)
         {
-            return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
+            return CreateResponse(DialogState.HostStartGame, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Мне жаль, я не говорю на испанском. Номер комнаты: {gameId}." +
                 " Когда все игроки присоединятся, нажмите \"Начать игру!\".",
@@ -216,7 +216,7 @@ namespace AliceMafia.Controllers
             lobby.AddPlayer(request.Session.SessionId,
                 request.State.Session.Name);
 
-            return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
+            return CreateResponse(DialogState.HostStartGame, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
                 gameId: lobby.Id);

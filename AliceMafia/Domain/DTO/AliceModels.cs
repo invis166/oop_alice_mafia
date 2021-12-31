@@ -14,14 +14,14 @@ namespace AliceMafia
     {
         DialogStart,
         JoinGame, // создать игру или подключиться
-        WriteName, // вписать имя игрока
-        WriteLobby,
-        Wait,
-        StartGame,
+        EnterName, // вписать имя игрока
+        EnterLobby,
+        WaitGameStart,
+        HostStartGame,
         InGame,
         EasterEgg,
-        SettingSelection,
-        CreateLobby
+        SelectSetting,
+        CreateLobby,
     }
     
     public class AliceRequest
