@@ -6,7 +6,7 @@ namespace AliceMafia.Application
         {
         }
 
-        public override void HandleUserRequest(AliceRequest request)
+        public override AliceResponse HandleUserRequest(AliceRequest request)
         {
             throw new System.NotImplementedException();
         }

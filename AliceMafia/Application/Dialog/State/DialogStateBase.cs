@@ -9,6 +9,6 @@ namespace AliceMafia.Application
             this.context = context;
         }
 
-        public abstract void HandleUserRequest(AliceRequest request);
+        public abstract AliceResponse HandleUserRequest(AliceRequest request);
     }
 }
