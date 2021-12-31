@@ -13,6 +13,8 @@ namespace AliceMafia.Infrastructure
             Bind<RoleActionBase>().To<DoctorAction>().WhenInjectedInto<Doctor>();
             Bind<RoleActionBase>().To<CourtesanAction>().WhenInjectedInto<Courtesan>();
             Bind<RoleActionBase>().To<EmptyAction>().WhenInjectedInto<Civilian>();
+
+            Bind<RoleFactoryBase>().To<RoleFactory>();
             Bind<IGame>().To<Game>();
         }
     }
