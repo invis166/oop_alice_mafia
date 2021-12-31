@@ -8,6 +8,7 @@ using AliceMafia.Infrastructure;
 using AliceMafia.Setting;
 using AliceMafia.Setting.DefaultSetting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Ninject;
 using Ninject.Parameters;
@@ -24,7 +25,7 @@ namespace AliceMafia.Controllers
         private Dictionary<IGameSetting, string> FillSettings()
         {
             var settingsConstructorInfos = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => t.IsSubclassOf(typeof(IGameSetting)) && t.Namespace.Contains("AliceMafia.Setting"))
+                .Where(t => t.GetInterface("IGameSetting") != null && t.Namespace.Contains("AliceMafia.Setting"))
                 .Select(t  => t.GetConstructor(Type.EmptyTypes))
                 .ToList();
             
@@ -42,7 +43,7 @@ namespace AliceMafia.Controllers
         private Dictionary<string, IGameSetting> FillInverseSettings()
         {
             var settingsConstructorInfos = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => t.IsSubclassOf(typeof(IGameSetting)) && t.Namespace.Contains("AliceMafia.Setting"))
+                .Where(t => t.GetInterface("IGameSetting") != null && t.Namespace.Contains("AliceMafia.Setting"))
                 .Select(t  => t.GetConstructor(Type.EmptyTypes))
                 .ToList();
             
@@ -51,7 +52,7 @@ namespace AliceMafia.Controllers
             foreach (var settingsConstructor in settingsConstructorInfos)
             {
                 var setting = (IGameSetting)settingsConstructor.Invoke(new object[0]);
-                result[setting.SettingName] = setting;
+                result[setting.SettingName.ToLower()] = setting;
             }
 
             return result;
@@ -133,7 +134,7 @@ namespace AliceMafia.Controllers
                         gameId: gameId);
 
                 case DialogState.Wait when lobbies[request.State.Session.GameId].GameStarted:
-                    return CreateResponse(DialogState.InGame, responseText: "Игра началась!", gameId: gameId);
+                    return CreateResponse(DialogState.InGame, CreateButtonList("Далее"), responseText: "Игра началась!", gameId: gameId);
 
                 case DialogState.Wait:
                     return CreateResponse(DialogState.Wait, CreateButtonList("Начать игру!"),
@@ -193,7 +194,7 @@ namespace AliceMafia.Controllers
 
             lobbies[gameId].StartGame();
 
-            return CreateResponse(DialogState.InGame, responseText: "Игра началась!", gameId: gameId);
+            return CreateResponse(DialogState.InGame, CreateButtonList("Далее"), responseText: "Игра началась!", gameId: gameId);
         }
 
         private AliceResponse HandleInvalidText(string gameId)
@@ -218,7 +219,7 @@ namespace AliceMafia.Controllers
             lobby.AddPlayer(request.Session.SessionId,
                 request.State.Session.Name);
 
-            return CreateResponse(DialogState.SettingSelection, CreateButtonList("Начать игру!"),
+            return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
                 gameId: lobby.Id);

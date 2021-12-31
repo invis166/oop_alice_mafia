@@ -31,7 +31,6 @@ namespace AliceMafia
             Players.Add(new Player(id, name));
         }
 
-        //todo
         public void StartGame()
         {
             SetRoles();
