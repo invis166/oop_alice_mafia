@@ -1,5 +1,4 @@
 ﻿using AliceMafia.Action;
-using AliceMafia.Setting;
 
 namespace AliceMafia
 {
