@@ -129,8 +129,8 @@ namespace AliceMafia
                 game.ProcessUserRequest(new UserRequest {UserId = mafia.Id, Payload = victim.Id});
 
             gameState.WhoseTurn = doctorPlayer.Role.Priority;
-            
-            //gameState.
+
+            // надо ночь закончить сделайте кто нибудь....
             //game.ProcessUserRequest(new UserRequest {UserId = doctorPlayer.Id, Payload = victim.Id});
             
         }
