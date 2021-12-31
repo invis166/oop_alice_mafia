@@ -85,12 +85,12 @@ namespace AliceMafia.Controllers
 
             switch (request.State.Session.DialogState)
             {
-                case DialogState.StartState:
+                case DialogState.DialogStart:
                     return CreateResponse(DialogState.WriteName,
                         responseText: "Привет! В этом навыке вы сможете сыграть в Мафию. Как вас зовут?");
 
                 case DialogState.WriteName:
-                    return CreateResponse(DialogState.GameStartState,
+                    return CreateResponse(DialogState.JoinGame,
                         CreateButtonList("Создать комнату", "Присоединиться к игре"),
                         request.Request.Command,
                         "Отлично! Теперь можно играть. Выберите, что вы хотите сделать.");
@@ -98,13 +98,13 @@ namespace AliceMafia.Controllers
                 case DialogState.SettingSelection:
                     return ProcessSettingselection(request);
                 
-                case DialogState.GameStartState:
+                case DialogState.JoinGame:
                     return ProcessLobbyStarting(request);
                 
                 case DialogState.CreateLobby:
                     return CreateLobby(request);
 
-                case DialogState.StartMafia:
+                case DialogState.StartGame:
                     return ProcessMafiaStarting(request, gameId);
 
                 case DialogState.WriteLobby when !lobbies.ContainsKey(request.Request.Command):
@@ -112,7 +112,7 @@ namespace AliceMafia.Controllers
                         responseText: "Такой игры нет:( Попробуйте снова! Введите номер комнаты:");
 
                 case DialogState.WriteLobby when lobbies[request.Request.Command].GameStarted:
-                    return CreateResponse(DialogState.GameStartState,
+                    return CreateResponse(DialogState.JoinGame,
                         CreateButtonList("Создать комнату", "Присоединиться к игре"),
                         responseText:
                         "Игра уже начата. К сожалению, так выпала карта." +
@@ -169,7 +169,7 @@ namespace AliceMafia.Controllers
                 return CreateResponse(DialogState.WriteLobby, name: request.State.Session.Name,
                     responseText: "Введите номер комнаты:");
 
-            return CreateResponse(DialogState.GameStartState,
+            return CreateResponse(DialogState.JoinGame,
                 CreateButtonList("Создать комнату", "Присоединиться к игре"),
                 request.Request.Command,
                 "Очень содержательно, но я вас не поняла. Выберите, что вы хотите сделать.");
@@ -184,7 +184,7 @@ namespace AliceMafia.Controllers
 
             if (players < 3)
             {
-                return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
+                return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
                     responseText: $"Для игры нужно минимум трое. Пока что присоединилось всего {players}.",
                     gameId: gameId);
             }
@@ -196,7 +196,7 @@ namespace AliceMafia.Controllers
 
         private AliceResponse HandleInvalidText(string gameId)
         {
-            return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
+            return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Мне жаль, я не говорю на испанском. Номер комнаты: {gameId}." +
                 " Когда все игроки присоединятся, нажмите \"Начать игру!\".",
@@ -216,7 +216,7 @@ namespace AliceMafia.Controllers
             lobby.AddPlayer(request.Session.SessionId,
                 request.State.Session.Name);
 
-            return CreateResponse(DialogState.StartMafia, CreateButtonList("Начать игру!"),
+            return CreateResponse(DialogState.StartGame, CreateButtonList("Начать игру!"),
                 responseText:
                 $"Номер комнаты: {lobby.Id}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
                 gameId: lobby.Id);

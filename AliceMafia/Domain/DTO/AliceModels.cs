@@ -12,12 +12,12 @@ namespace AliceMafia
 
     public enum DialogState
     {
-        StartState,
-        GameStartState, // создать игру или подключиться
+        DialogStart,
+        JoinGame, // создать игру или подключиться
         WriteName, // вписать имя игрока
         WriteLobby,
         Wait,
-        StartMafia,
+        StartGame,
         InGame,
         EasterEgg,
         SettingSelection,
