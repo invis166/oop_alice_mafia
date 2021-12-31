@@ -6,10 +6,7 @@ using System.Reflection;
 using AliceMafia.Application;
 using AliceMafia.Infrastructure;
 using AliceMafia.Setting;
-using AliceMafia.Setting.DefaultSetting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
 using Ninject;
 using Ninject.Parameters;
 

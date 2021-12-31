@@ -1,4 +1,3 @@
-using AliceMafia.Action;
 using AliceMafia.Infrastructure;
 using Ninject;
 using Ninject.Parameters;
