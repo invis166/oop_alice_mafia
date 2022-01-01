@@ -2,13 +2,16 @@ namespace AliceMafia.Application
 {
     public class InGameState : DialogStateBase
     {
-        public InGameState(IUserContext context) : base(context)
+        public InGameState(UserContextBase context) : base(context)
         {
         }
 
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
-            throw new System.NotImplementedException();
+            var lobbyId = request.Request.Command;
+            var lobby = context.GetLobbyById(lobbyId);
+
+            return lobby.HandleRequest(request);
         }
     }
 }

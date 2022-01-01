@@ -3,8 +3,8 @@ namespace AliceMafia.Application
 {
     public abstract class DialogStateBase
     {
-        private IUserContext context;
-        public DialogStateBase(IUserContext context)
+        protected UserContextBase context;
+        public DialogStateBase(UserContextBase context)
         {
             this.context = context;
         }

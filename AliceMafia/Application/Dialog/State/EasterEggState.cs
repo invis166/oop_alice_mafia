@@ -2,7 +2,7 @@ namespace AliceMafia.Application
 {
     public class EasterEggState : DialogStateBase
     {
-        public EasterEggState(IUserContext context) : base(context)
+        public EasterEggState(UserContextBase context) : base(context)
         {
         }
 

@@ -1,14 +1,31 @@
+using AliceMafia.Application.Dialog;
+using AliceMafia.Infrastructure;
+using Ninject;
+using Ninject.Activation;
+using Ninject.Parameters;
+
 namespace AliceMafia.Application
 {
     public class CreateLobbyState : DialogStateBase
     {
-        public CreateLobbyState(IUserContext context) : base(context)
+        public CreateLobbyState(UserContextBase context) : base(context)
         {
         }
 
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
-            throw new System.NotImplementedException();
+            var inverseSettings = Utils.FillInverseSettings();
+            var todo = request.Request.Command;
+            var neededSetting = inverseSettings[todo];
+            var lobbyId = context.CreateLobby(neededSetting);
+            var lobby = context.GetLobbyById(lobbyId);
+            
+            lobby.AddPlayer(request.Session.SessionId, context.PlayerName);
+            context.ChangeState(new HostStartGameState(context));
+
+            return Utils.CreateResponse(
+                $"Номер комнаты: {lobbyId}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
+                Utils.CreateButtonList("Начать игру!"));
         }
     }
 }

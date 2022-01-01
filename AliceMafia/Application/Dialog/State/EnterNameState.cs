@@ -1,14 +1,20 @@
+using AliceMafia.Application.Dialog;
+
 namespace AliceMafia.Application
 {
     public class EnterNameState : DialogStateBase
     {
-        public EnterNameState(IUserContext context) : base(context)
+        public EnterNameState(UserContextBase context) : base(context)
         {
         }
 
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
-            throw new System.NotImplementedException();
+            context.ChangeState(new JoinGameState(context));
+            context.PlayerName = request.Request.Command;
+            return Utils.CreateResponse(
+                "Отлично! Теперь можно играть. Выберите, что вы хотите сделать.",
+                Utils.CreateButtonList("Создать комнату", "Присоединиться к игре"));
         }
     }
 }
