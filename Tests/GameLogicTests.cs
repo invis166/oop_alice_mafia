@@ -21,7 +21,7 @@ namespace AliceMafia
             // узнаем свои роли
             for (var j = 0; j < playersCount; j++)
             {
-                game.ProcessUserRequest(new UserRequest {Data = null, UserId = j.ToString()});
+                game.HandleUserRequest(new UserRequest {Data = null, UserId = j.ToString()});
                 var player = gameState.AlivePlayers.First(plr => plr.Id == j.ToString());
                 Assert.True(player.State == PlayerState.DayWaiting);
             }
@@ -41,7 +41,7 @@ namespace AliceMafia
 
             var mafia = gameState.AlivePlayers.First(x => x.Role is Mafia);
             foreach (var player in gameState.AlivePlayers)
-                game.ProcessUserRequest(new UserRequest {UserId = player.Id, Payload = mafia.Id});
+                game.HandleUserRequest(new UserRequest {UserId = player.Id, Payload = mafia.Id});
             
             Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
             Assert.IsNotEmpty(gameState.AlivePlayers);
@@ -59,12 +59,12 @@ namespace AliceMafia
             gameState.DaysCounter = 2;
             var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
             foreach (var player in gameState.AlivePlayers)
-                game.ProcessUserRequest(new UserRequest {UserId = player.Id, Payload = victim.Id});
+                game.HandleUserRequest(new UserRequest {UserId = player.Id, Payload = victim.Id});
             
             Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
             foreach (var player in gameState.AlivePlayers)
             {
-                var response = game.ProcessUserRequest(new UserRequest {UserId = player.Id});
+                var response = game.HandleUserRequest(new UserRequest {UserId = player.Id});
                 Assert.True(response.Title == gameSetting.GeneralMessages.GetJailMessage(victim.Name));
             }
 
@@ -83,8 +83,8 @@ namespace AliceMafia
 
             var mafiaPlayer = game.Players.First(x => x.Role is Mafia);
             var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
-            game.ProcessUserRequest(new UserRequest {UserId = mafiaPlayer.Id});
-            game.ProcessUserRequest(new UserRequest {UserId = mafiaPlayer.Id, Payload = victim.Id});
+            game.HandleUserRequest(new UserRequest {UserId = mafiaPlayer.Id});
+            game.HandleUserRequest(new UserRequest {UserId = mafiaPlayer.Id, Payload = victim.Id});
             
             Assert.True(gameState.TimeOfDay == TimeOfDay.Day);
             Assert.IsEmpty(gameState.AlivePlayers.Where(player => player.Id == victim.Id));
@@ -123,10 +123,10 @@ namespace AliceMafia
             var victim = gameState.AlivePlayers.First(player => player.Role is Civilian);
             var mafiaPlayers = gameState.AlivePlayers.Where(player => player.Role is Mafia);
             foreach (var player in gameState.AlivePlayers)
-                game.ProcessUserRequest(new UserRequest {UserId = player.Id});
+                game.HandleUserRequest(new UserRequest {UserId = player.Id});
                 
             foreach (var mafia in mafiaPlayers)
-                game.ProcessUserRequest(new UserRequest {UserId = mafia.Id, Payload = victim.Id});
+                game.HandleUserRequest(new UserRequest {UserId = mafia.Id, Payload = victim.Id});
 
             gameState.WhoseTurn = doctorPlayer.Role.Priority;
 

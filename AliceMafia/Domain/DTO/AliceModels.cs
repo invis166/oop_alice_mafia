@@ -10,20 +10,6 @@ namespace AliceMafia
         ButtonPressed
     }
 
-    public enum DialogState
-    {
-        DialogStart,
-        JoinGame, // создать игру или подключиться
-        EnterName, // вписать имя игрока
-        EnterLobby,
-        WaitGameStart,
-        HostStartGame,
-        InGame,
-        EasterEgg,
-        SelectSetting,
-        CreateLobby,
-    }
-    
     public class AliceRequest
     {
         [JsonProperty("meta")] 
@@ -35,9 +21,6 @@ namespace AliceMafia
         [JsonProperty("session")] 
         public SessionModel Session { get; set; }
         
-        [JsonProperty("state")]
-        public RequestStateModel State{ get; set; }
-
         [JsonProperty("version")] 
         public string Version { get; set; }
     }
@@ -46,9 +29,6 @@ namespace AliceMafia
     {
         [JsonProperty("response")] 
         public ResponseModel Response { get; set; }
-
-        [JsonProperty("session_state")]
-        public StateModel State { get; set; }
 
         [JsonProperty("version")] 
         public string Version { get; set; } = "1.0";
@@ -128,25 +108,6 @@ namespace AliceMafia
 
         [JsonProperty("hide")] 
         public bool Hide { get; set; }
-    }
-
-    public class StateModel 
-    {
-        [JsonProperty("game_id")]
-        public string GameId { get; set; }
-        
-        [JsonConverter(typeof(StringEnumConverter))] 
-        [JsonProperty("dialog_state")] 
-        public DialogState DialogState { get; set; }
-        
-        [JsonProperty("player_name")] 
-        public string Name { get; set; }
-    }
-    
-    public class RequestStateModel
-    {
-        [JsonProperty("session")]
-        public StateModel Session { get; set; }
     }
 
     public class PayloadModel

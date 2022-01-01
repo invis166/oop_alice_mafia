@@ -25,7 +25,7 @@ namespace AliceMafia.Application
         public AliceResponse HandleRequest(AliceRequest request)
         {
             var userRequest = new UserRequest {UserId = request.Session.SessionId, Data = request.Request.Command, Payload = request.Request.Payload?.UserId}; 
-            var userResponse = game.ProcessUserRequest(userRequest);
+            var userResponse = game.HandleUserRequest(userRequest);
 
             List<ButtonModel> buttons;
             if (userResponse.Buttons is null)
@@ -34,6 +34,7 @@ namespace AliceMafia.Application
                 buttons = userResponse.Buttons
                     .Select(btn => new ButtonModel {Title = btn.Value, Payload = new PayloadModel {UserId = btn.Key}, Hide = true})
                     .ToList();
+            
             return new AliceResponse
             {
                 Response = new ResponseModel
@@ -41,11 +42,6 @@ namespace AliceMafia.Application
                     Text = userResponse.Title,
                     Buttons = buttons
                 },
-                State = new StateModel
-                {
-                    GameId = request.State.Session.GameId,
-                    DialogState = request.State.Session.DialogState
-                }
             };
         }
 

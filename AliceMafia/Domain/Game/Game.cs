@@ -255,7 +255,7 @@ namespace AliceMafia
         }
         
 
-        public UserResponse ProcessUserRequest(UserRequest request)
+        public UserResponse HandleUserRequest(UserRequest request)
         {
             if (gameState.TimeOfDay == TimeOfDay.Day)
                 return ProcessRequestWhileDay(request);
