@@ -13,19 +13,29 @@ namespace AliceMafia.Application
         {
             var lobbyId = request.Request.Command;
             var lobby = context.GetLobbyById(lobbyId);
+            var userId = request.Session.SessionId;
             if (lobby is null)
             {
                 context.ChangeState(new EnterLobbyIdState(context));
                 
                 return Utils.CreateResponse("Такой игры нет:( Попробуйте снова! Введите номер комнаты:");
             }
+
+            if (lobby.GameStarted)
+            {
+                context.ChangeState(new JoinGameState(context));
+                return Utils.CreateResponse(
+                    "Игра уже начата. К сожалению, так выпала карта." +
+                    " Попробуйте начать свою игру или присоединиться к другой.",
+                    Utils.CreateButtonList("Создать комнату", "Присоединиться к игре"));
+            }
             
-            context.ChangeState(new JoinGameState(context));
             context.LobbyId = lobbyId;
+            context.ChangeState(new WaitGameStartState(context));
+            lobby.AddPlayer(userId, context.PlayerName);
             return Utils.CreateResponse(
-                "Игра уже начата. К сожалению, так выпала карта." +
-                " Попробуйте начать свою игру или присоединиться к другой.",
-                Utils.CreateButtonList("Создать комнату", "Присоединиться к игре"));
+                "Вы успешно присоединились к игре. Ожидайте начала!",
+                Utils.CreateButtonList("Начать игру!"));
         }
     }
 }

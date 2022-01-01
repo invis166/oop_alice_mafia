@@ -8,8 +8,7 @@ namespace AliceMafia.Application
 
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
-            var lobbyId = request.Request.Command;
-            var lobby = context.GetLobbyById(lobbyId);
+            var lobby = context.GetLobbyById(context.LobbyId);
 
             return lobby.HandleRequest(request);
         }

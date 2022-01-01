@@ -17,7 +17,7 @@ namespace AliceMafia.Application
             context.ChangeState(new CreateLobbyState(context));
             
             return Utils.CreateResponse(
-                "Пожалуйста, выберите сеттинг для лобби", 
+                "Пожалуйста, выберите сеттинг для игры", 
                 buttons);
         }
     }

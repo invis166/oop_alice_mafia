@@ -8,10 +8,16 @@ namespace AliceMafia.Application
         public string PlayerName { get; set; }
         public string LobbyId { get; set; }
         protected ControllerData data;
+        protected DialogStateBase state;
 
         public UserContextBase(ControllerData data)
         {
             this.data = data;
+        }
+
+        public AliceResponse HandleUserRequest(AliceRequest request)
+        {
+            return state.HandleUserRequest(request);
         }
         
         public abstract void ChangeState(DialogStateBase state);

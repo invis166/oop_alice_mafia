@@ -1,4 +1,6 @@
 using AliceMafia.Action;
+using AliceMafia.Application;
+using Ninject;
 using Ninject.Modules;
 
 namespace AliceMafia.Infrastructure
@@ -15,6 +17,7 @@ namespace AliceMafia.Infrastructure
             Bind<RoleActionBase>().To<EmptyAction>().WhenInjectedInto<Civilian>();
 
             Bind<RoleFactoryBase>().To<RoleFactory>();
+            Bind<UserContextBase>().To<UserContext>();
             Bind<IGame>().To<Game>();
         }
     }

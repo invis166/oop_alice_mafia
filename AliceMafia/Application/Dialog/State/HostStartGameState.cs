@@ -12,7 +12,6 @@ namespace AliceMafia.Application
         {
             if (!request.Request.Command.Contains("начать игру"))
             {
-                context.ChangeState(new HostStartGameState(context));
                 return Utils.CreateResponse(
                     $"Мне жаль, я не говорю на испанском. Номер комнаты: {context.LobbyId}." +
                     " Когда все игроки присоединятся, нажмите \"Начать игру!\".",

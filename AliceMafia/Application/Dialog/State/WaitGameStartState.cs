@@ -18,13 +18,16 @@ namespace AliceMafia.Application
                     "Я бы хотела понять вас, но я всего лишь студенческий проект. Ожидайте начала!",
                     Utils.CreateButtonList("Начать игру!"));
             }
+
             if (context.GetLobbyById(context.LobbyId).GameStarted)
             {
                 context.ChangeState(new InGameState(context));
                 return Utils.CreateResponse("Игра началась!", Utils.CreateButtonList("Далее"));
             }
 
-            return new AliceResponse();
+            return Utils.CreateResponse(
+                "Игра еще не началась, подождите.",
+                Utils.CreateButtonList("Начать игру!"));
         }
     }
 }

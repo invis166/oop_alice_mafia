@@ -8,8 +8,8 @@ namespace AliceMafia.Application
 {
     public class UserContext : UserContextBase
     {
-        public string PlayerName { get; set; }
         public string LobbyId { get; set; }
+        public string PlayerName { get; set; }
         
         public UserContext(ControllerData data) : base(data)
         {
@@ -17,7 +17,7 @@ namespace AliceMafia.Application
         
         public override void ChangeState(DialogStateBase state)
         {
-            throw new System.NotImplementedException();
+            this.state = state;
         }
 
         public override string CreateLobby(IGameSetting setting)

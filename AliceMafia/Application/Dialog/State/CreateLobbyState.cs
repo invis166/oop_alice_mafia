@@ -22,6 +22,7 @@ namespace AliceMafia.Application
             
             lobby.AddPlayer(request.Session.SessionId, context.PlayerName);
             context.ChangeState(new HostStartGameState(context));
+            context.LobbyId = lobbyId;
 
             return Utils.CreateResponse(
                 $"Номер комнаты: {lobbyId}. Когда все игроки присоединятся, нажмите \"Начать игру!\".",
