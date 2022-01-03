@@ -1,3 +1,5 @@
+using AliceMafia.Controllers;
+
 namespace AliceMafia.Application
 {
     public class InGameState : DialogStateBase
@@ -8,7 +10,7 @@ namespace AliceMafia.Application
 
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
-            var lobby = context.GetLobbyById(context.LobbyId);
+            var lobby = AliceMafiaController.GetLobbyById(context.LobbyId);
 
             return lobby.HandleRequest(request);
         }

@@ -1,5 +1,6 @@
 using System.Data.Common;
 using AliceMafia.Application.Dialog;
+using AliceMafia.Controllers;
 
 namespace AliceMafia.Application
 {
@@ -12,7 +13,7 @@ namespace AliceMafia.Application
         public override AliceResponse HandleUserRequest(AliceRequest request)
         {
             var lobbyId = request.Request.Command;
-            var lobby = context.GetLobbyById(lobbyId);
+            var lobby = AliceMafiaController.GetLobbyById(lobbyId);
             var userId = request.Session.SessionId;
             if (lobby is null)
             {

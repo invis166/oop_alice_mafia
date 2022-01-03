@@ -1,4 +1,5 @@
 using AliceMafia.Application.Dialog;
+using AliceMafia.Controllers;
 
 namespace AliceMafia.Application
 {
@@ -19,7 +20,7 @@ namespace AliceMafia.Application
                     Utils.CreateButtonList("Начать игру!"));
             }
 
-            if (context.GetLobbyById(context.LobbyId).GameStarted)
+            if (AliceMafiaController.GetLobbyById(context.LobbyId).GameStarted)
             {
                 context.ChangeState(new InGameState(context));
                 return Utils.CreateResponse("Игра началась!", Utils.CreateButtonList("Далее"));

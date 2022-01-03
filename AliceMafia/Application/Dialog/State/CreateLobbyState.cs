@@ -1,4 +1,5 @@
 using AliceMafia.Application.Dialog;
+using AliceMafia.Controllers;
 using AliceMafia.Infrastructure;
 using Ninject;
 using Ninject.Activation;
@@ -17,8 +18,8 @@ namespace AliceMafia.Application
             var inverseSettings = Utils.FillInverseSettings();
             var todo = request.Request.Command;
             var neededSetting = inverseSettings[todo];
-            var lobbyId = context.CreateLobby(neededSetting);
-            var lobby = context.GetLobbyById(lobbyId);
+            var lobbyId = AliceMafiaController.CreateLobby(neededSetting);
+            var lobby = AliceMafiaController.GetLobbyById(lobbyId);
             
             lobby.AddPlayer(request.Session.SessionId, context.PlayerName);
             context.ChangeState(new HostStartGameState(context));

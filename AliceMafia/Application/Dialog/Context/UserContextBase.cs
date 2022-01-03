@@ -7,13 +7,7 @@ namespace AliceMafia.Application
     {
         public string PlayerName { get; set; }
         public string LobbyId { get; set; }
-        protected ControllerData data;
         protected DialogStateBase state;
-
-        public UserContextBase(ControllerData data)
-        {
-            this.data = data;
-        }
 
         public AliceResponse HandleUserRequest(AliceRequest request)
         {
@@ -21,7 +15,5 @@ namespace AliceMafia.Application
         }
         
         public abstract void ChangeState(DialogStateBase state);
-        public abstract string CreateLobby(IGameSetting setting);
-        public abstract GameLobby GetLobbyById(string lobbyId);
     }
 }

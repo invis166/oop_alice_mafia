@@ -206,8 +206,8 @@ namespace AliceMafia
             if (currentPlayer.Role is Sheriff)
             {
                 var isMafia = gameState.CheckedBySheriff.Role is Mafia;
-                var mafiaName = gameSetting.roles["mafia"].Name;
-                return new UserResponse {Title = "Игрок" + (isMafia ? "" : "не") + mafiaName};
+                var mafiaName = gameSetting.roles["Mafia"].Name;
+                return new UserResponse {Title = "Игрок " + (isMafia ? "" : "не ") + mafiaName};
             }
 
             return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};

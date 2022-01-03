@@ -1,4 +1,5 @@
 using AliceMafia.Application.Dialog;
+using AliceMafia.Controllers;
 
 namespace AliceMafia.Application
 {
@@ -19,7 +20,7 @@ namespace AliceMafia.Application
                 
             }
 
-            var lobby = context.GetLobbyById(context.LobbyId);
+            var lobby = AliceMafiaController.GetLobbyById(context.LobbyId);
             if (lobby.PlayersCount < 3)
             {
                 context.ChangeState(new HostStartGameState(context));

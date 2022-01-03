@@ -7,7 +7,7 @@ namespace AliceMafia.Setting.DefaultSetting
         public string GameStartMessage { get; }
         public string DeathMessage => "К сожалению, вы мертвы.";
         public string DayVotingMessage => "Проголосуйте за того, кого считаете мафией:";
-        public string DayWaitingMessage => "Ожидайте начала ночи.";
+        public string DayWaitingMessage => "Ожидайте окончания голосования.";
         public string NightWaitingMessage => "Сейчас ночь. Ожидайте следующего дня или своей очереди ходить.";
         public string UndecidedJailMessage => "Игроки не пришли к единогласному решению на дневном голосовании.";
         public string DayEndMessage => "День окончен.";
