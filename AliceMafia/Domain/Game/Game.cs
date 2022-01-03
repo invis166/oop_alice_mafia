@@ -182,7 +182,7 @@ namespace AliceMafia
 
             var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x
                 => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
-            if (countOfNotVotedPlayers == 0)
+            if (countOfNotVotedPlayers == 0 && !(currentPlayer.Role is Civilian))
             {
                 var nextPriority = NextPriority(currentPriority);
                 if (nextPriority == 0)
