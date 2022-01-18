@@ -16,13 +16,11 @@ namespace AliceMafia.Controllers
         private static ConcurrentDictionary<string, UserContextBase> activeUsers = new ConcurrentDictionary<string, UserContextBase>();
 
         [HttpPost]
-        public AliceResponse AlicePost(AliceRequest request)
+        public AliceResponse AlicePost(AliceRequest request, UserContextBase context)
         {
             var sessionId = request.Session.SessionId;
             if (!activeUsers.ContainsKey(sessionId))
             {
-                var kernel = new StandardKernel(new ServiceModule());
-                var context = kernel.Get<UserContextBase>();
                 activeUsers[sessionId] = context;
                 context.ChangeState(new DialogStartState(context));
             }

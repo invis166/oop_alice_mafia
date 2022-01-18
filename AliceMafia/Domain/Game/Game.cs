@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AliceMafia.PlayerState;
 using AliceMafia.Setting;
 using AliceMafia.Voting;
 
@@ -8,15 +9,14 @@ namespace AliceMafia
 {
     public class Game : IGame
     {
-        private IGameSetting gameSetting;
+        private GameContext context;
         private RoleFactoryBase roleFactory;
-        private GameState gameState;
         public List<Player> Players { get; }
 
         public Game(IGameSetting gameSetting)
         {
-            this.gameSetting = gameSetting;
-            gameState = new GameState();
+            var gameState = new GameState();
+            context = new GameContext(gameSetting, gameState);
             roleFactory = new RoleFactory(gameState);
             Players = new List<Player>();
         }
@@ -30,7 +30,7 @@ namespace AliceMafia
         {
             SetRoles();
             foreach (var player in Players)
-                gameState.AlivePlayers.Add(player);
+                context.State.AlivePlayers.Add(player);
         }
 
         private void SetRoles()
@@ -68,27 +68,27 @@ namespace AliceMafia
             if (gameOver.IsGameOver)
                 return gameOver;
             
-            var currentPlayer = GetPlayerById(userRequest.UserId);
-            currentPlayer.HasVoted = false;
+            var currentPlayer = GetAlivePlayerById(userRequest.UserId);
+            currentPlayer.HasVoted = false; // это нахуя надо77
             if (!gameState.AlivePlayers.Contains(currentPlayer))
-                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
+                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage}; // сделать стейт мертвого игрока
 
-            if (currentPlayer.State == PlayerState.DayWaiting)
+            if (currentPlayer.State == PlayerState.DayWaiting) // сделали
                 return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
 
-            if (gameState.DaysCounter == 0)
+            if (gameState.DaysCounter == 0) // сделали
                 return HandleFirstDay(currentPlayer);
             
-            if (currentPlayer.State == PlayerState.DayVoting)
+            if (currentPlayer.State == PlayerState.DayVoting) // сделали
                 return HandleVote(userRequest, currentPlayer);
             
-            if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightAction)
+            if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightAction) // сделать 1 стейт
                 return HandleDayStart(currentPlayer);
             
             return new UserResponse();
         }
 
-        private UserResponse HandleDayStart(Player currentPlayer)
+        private UserResponse HandleDayStart(Player currentPlayer) 
         {
             currentPlayer.State = PlayerState.DayVoting;
             var killMessage = gameSetting.GeneralMessages.GetKillMessage(gameState
@@ -105,9 +105,9 @@ namespace AliceMafia
             };
         }
 
-        private UserResponse HandleVote(UserRequest userRequest, Player currentPlayer)
+        private UserResponse HandleVote(UserRequest userRequest, Player currentPlayer) // сделали
         {
-            gameState.Voting.AddVote(GetPlayerById(userRequest.Payload));
+            gameState.Voting.AddVote(GetAlivePlayerById(userRequest.Payload));
             currentPlayer.State = PlayerState.DayWaiting;
 
             if (gameState.Voting.totalVoteCounter == gameState.AlivePlayers.Count)
@@ -125,7 +125,7 @@ namespace AliceMafia
             return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
         }
 
-        private UserResponse HandleFirstDay(Player currentPlayer)
+        private UserResponse HandleFirstDay(Player currentPlayer) // сделали
         {
             currentPlayer.State = PlayerState.DayWaiting;
             string roleName;
@@ -147,7 +147,7 @@ namespace AliceMafia
             if (gameOver.IsGameOver)
                 return gameOver;
             
-            var currentPlayer = GetPlayerById(userRequest.UserId);
+            var currentPlayer = GetAlivePlayerById(userRequest.UserId);
             
             if (!gameState.AlivePlayers.Contains(currentPlayer))
                 return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
@@ -176,7 +176,7 @@ namespace AliceMafia
 
         private UserResponse HandleNightAction(UserRequest userRequest, Player currentPlayer, int currentPriority)
         {
-            currentPlayer.Role.NightAction.DoAction(GetPlayerById(userRequest.Payload));
+            currentPlayer.Role.NightAction.DoAction(GetAlivePlayerById(userRequest.Payload));
             currentPlayer.State = PlayerState.NightWaiting;
             currentPlayer.HasVoted = true;
 
@@ -229,7 +229,7 @@ namespace AliceMafia
 
         private UserResponse HandleDayResult(UserRequest request)
         {
-            var currentPlayer = GetPlayerById(request.UserId);
+            var currentPlayer = GetAlivePlayerById(request.UserId);
             currentPlayer.State = PlayerState.NightWaiting;
             var voteResult = gameState.Voting.GetResult();
             if (voteResult.Count == 1)
@@ -257,18 +257,18 @@ namespace AliceMafia
 
         public UserResponse HandleUserRequest(UserRequest request)
         {
-            if (gameState.TimeOfDay == TimeOfDay.Day)
-                return ProcessRequestWhileDay(request);
+            var currentPlayer = GetAlivePlayerById(context.State, request.UserId);
+            currentPlayer.State ??= new DayVotingState(currentPlayer, context);
             
-            return ProcessRequestWhileNight(request);
+            return currentPlayer.State.HandleUserRequest(request);
         }
 
-        public int NextPriority(int priority) => gameState
+        private static int NextPriority(GameState gameState, int priority) => gameState
             .AlivePlayers
             .Select(x => x.Role.Priority)
             .OrderBy(x => x)
             .FirstOrDefault(x => x > priority);
 
-       private Player GetPlayerById(string id) => Players.First(player => player.Id == id);
+        public static Player GetAlivePlayerById(GameState gameState, string id) => gameState.AlivePlayers.First(player => player.Id == id);
     }
 }
