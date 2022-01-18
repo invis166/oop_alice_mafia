@@ -137,7 +137,7 @@ namespace AliceMafia
         
         public static Game InitializeGame(int playersCount)
         {
-            var game = new Game(new DefaultGameSetting());
+            var game = new Game();
             for (var j = 0; j < playersCount; j++)
                 game.AddPlayer(j.ToString(), j.ToString());
             
