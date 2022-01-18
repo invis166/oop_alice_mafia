@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AliceMafia.Setting;
+using AliceMafia.Setting.DefaultSetting;
 using AliceMafia.Voting;
 
 namespace AliceMafia
@@ -13,9 +14,9 @@ namespace AliceMafia
         private GameState gameState;
         public List<Player> Players { get; }
 
-        public Game(IGameSetting gameSetting)
+        public Game()
         {
-            this.gameSetting = gameSetting;
+            gameSetting = new DefaultGameSetting();
             gameState = new GameState();
             roleFactory = new RoleFactory(gameState);
             Players = new List<Player>();
@@ -31,6 +32,11 @@ namespace AliceMafia
             SetRoles();
             foreach (var player in Players)
                 gameState.AlivePlayers.Add(player);
+        }
+
+        public void SetSetting(IGameSetting setting)
+        {
+            gameSetting = setting;
         }
 
         private void SetRoles()
