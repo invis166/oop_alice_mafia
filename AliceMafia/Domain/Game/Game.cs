@@ -65,7 +65,7 @@ namespace AliceMafia
         public UserResponse HandleUserRequest(UserRequest request)
         {
             var currentPlayer = context.State.GetAlivePlayerById(request.UserId);
-            currentPlayer.State ??= new DayVotingState(currentPlayer, context);
+            currentPlayer.State ??= new FirstDayState(currentPlayer, context);
             
             return currentPlayer.State.HandleUserRequest(request);
         }
