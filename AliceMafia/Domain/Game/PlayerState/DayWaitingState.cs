@@ -1,6 +1,6 @@
 namespace AliceMafia.PlayerState
 {
-    public class DayWaitingState : PlayerStateBase
+    public class DayWaitingState : PlayerStateBase // чек
     {
         public DayWaitingState(Player context, GameContext gameContext) : base(context, gameContext)
         {
