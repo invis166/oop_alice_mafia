@@ -32,11 +32,11 @@ namespace AliceMafia.Application
             }
 
             var lobby = AliceMafiaController.GetLobbyById(context.LobbyId);
-            if (lobby.PlayersCount < 3)
+            if (lobby.PlayersCount < 4)
             {
                 context.ChangeState(new HostStartGameState(context));
                 return Utils.CreateResponse(
-                    $"Для игры нужно минимум трое. Пока что присоединилось всего {lobby.PlayersCount}.",
+                    $"Для игры нужно минимум четверо. Пока что присоединилось всего {lobby.PlayersCount}.",
                     Utils.CreateButtonList("Начать игру!"));
             }
 

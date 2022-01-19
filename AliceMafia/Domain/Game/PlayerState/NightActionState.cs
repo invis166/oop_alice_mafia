@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Net.Mime;
+using AliceMafia.Domain.Roles;
 using AliceMafia.Voting;
 
 namespace AliceMafia.PlayerState
@@ -38,7 +39,7 @@ namespace AliceMafia.PlayerState
                 return new UserResponse {Title = "Игрок " + (isMafia ? "" : "не ") + mafiaName};
             }
 
-            return new UserResponse {Title = gameContext.Setting.GeneralMessages.NightWaitingMessage};
+            return new UserResponse {Title = gameContext.Setting.GeneralMessages.AfterVotingMessage};
         }
 
         private void HandleNightEnd()
