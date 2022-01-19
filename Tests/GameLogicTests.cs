@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using AliceMafia.PlayerState;
 using AliceMafia.Setting;
 using AliceMafia.Setting.DefaultSetting;
 using NUnit.Framework;
@@ -16,18 +17,17 @@ namespace AliceMafia
         public void TestFirstDayEnds(int playersCount)
         {
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
             
-            // узнаем свои роли
             for (var j = 0; j < playersCount; j++)
             {
                 game.HandleUserRequest(new UserRequest {Data = null, UserId = j.ToString()});
                 var player = gameState.AlivePlayers.First(plr => plr.Id == j.ToString());
-                Assert.True(player.State == PlayerState.DayWaiting);
+                Assert.True(player.State is DayWaitingState || j == playersCount - 1);
             }
 
-            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
-            Assert.True(gameState.DaysCounter != 0);
+            foreach (var player in gameState.AlivePlayers)
+                Assert.True(player.State is NightWaitingState);
         }
 
         [TestCase(6)]
@@ -36,14 +36,17 @@ namespace AliceMafia
         public void TestSecondDayVoteKillPlayers(int playersCount)
         {
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
-            gameState.DaysCounter = 2;
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
+
+            foreach (var player in gameState.AlivePlayers)
+                player.State = new DayVotingState(player, GetPrivateField<GameContext>(game, "context"));
 
             var mafia = gameState.AlivePlayers.First(x => x.Role is Mafia);
             foreach (var player in gameState.AlivePlayers)
                 game.HandleUserRequest(new UserRequest {UserId = player.Id, Payload = mafia.Id});
             
-            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
+            foreach (var player in gameState.AlivePlayers)
+                Assert.True(player.State is DayResultState);
             Assert.IsNotEmpty(gameState.AlivePlayers);
             Assert.IsEmpty(gameState.AlivePlayers.Where(player => player.Id == mafia.Id));
         }
@@ -53,15 +56,21 @@ namespace AliceMafia
         {
             
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
-            var gameSetting = GetGameSetting(game);
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
+            var gameSetting= GetPrivateField<GameContext>(game, "context").Setting;
 
-            gameState.DaysCounter = 2;
+            foreach (var player in gameState.AlivePlayers)
+                player.State = new DayVotingState(player, GetPrivateField<GameContext>(game, "context"));
+            
             var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
             foreach (var player in gameState.AlivePlayers)
                 game.HandleUserRequest(new UserRequest {UserId = player.Id, Payload = victim.Id});
+
+            foreach (var player in gameState.AlivePlayers)
+            {
+                Assert.True(player.State is DayResultState);
+            }
             
-            Assert.True(gameState.TimeOfDay == TimeOfDay.Night);
             foreach (var player in gameState.AlivePlayers)
             {
                 var response = game.HandleUserRequest(new UserRequest {UserId = player.Id});
@@ -75,18 +84,18 @@ namespace AliceMafia
         {
             var playersCount = 3;
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
 
-            gameState.DaysCounter = 1;
-            gameState.TimeOfDay = TimeOfDay.Night;
-            
+            foreach (var player in gameState.AlivePlayers)
+                player.State = new NightWaitingState(player, GetPrivateField<GameContext>(game, "context"));
 
             var mafiaPlayer = game.Players.First(x => x.Role is Mafia);
             var victim = gameState.AlivePlayers.First(player => player.Role is not Mafia);
             game.HandleUserRequest(new UserRequest {UserId = mafiaPlayer.Id});
             game.HandleUserRequest(new UserRequest {UserId = mafiaPlayer.Id, Payload = victim.Id});
             
-            Assert.True(gameState.TimeOfDay == TimeOfDay.Day);
+            foreach (var player in gameState.AlivePlayers)
+                Assert.True(player.State is NightResultState);
             Assert.IsEmpty(gameState.AlivePlayers.Where(player => player.Id == victim.Id));
         }
 
@@ -99,7 +108,7 @@ namespace AliceMafia
         public void TestRolesDistribution(int playersCount, int civilianCount, int mafiaCount, int doctorCount, int sheriffCount, int courtesanCount)
         {
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
             
             Assert.True(gameState.AlivePlayers.Count == playersCount);
             Assert.True(gameState.AlivePlayers.Count(player => player.Role is Civilian) == civilianCount);
@@ -114,10 +123,10 @@ namespace AliceMafia
         {
             var playersCount = 5;
             var game = InitializeGame(playersCount);
-            var gameState = GetGameState(game);
-            
-            gameState.DaysCounter = 2;
-            gameState.TimeOfDay = TimeOfDay.Night;
+            var gameState = GetPrivateField<GameContext>(game, "context").State;
+
+            foreach (var player in gameState.AlivePlayers)
+                player.State = new NightWaitingState(player, GetPrivateField<GameContext>(game, "context"));
 
             var doctorPlayer = gameState.AlivePlayers.First(player => player.Role is Doctor);
             var victim = gameState.AlivePlayers.First(player => player.Role is Civilian);
@@ -139,7 +148,6 @@ namespace AliceMafia
 
             endNightMethod.Invoke(game, System.Array.Empty<object>());
 
-            Assert.True(gameState.TimeOfDay == TimeOfDay.Day);
             Assert.True(gameState.AlivePlayers.Contains(victim));
         }
         
@@ -154,18 +162,11 @@ namespace AliceMafia
             return game;
         }
 
-        private static GameState GetGameState(Game game)
+        public static T GetPrivateField<T>(Game game, string fieldName)
         {
-            var field = game.GetType().GetField("gameState", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = game.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 
-            return (GameState) field.GetValue(game);
-        }
-
-        private static IGameSetting GetGameSetting(Game game)
-        {
-            var field = game.GetType().GetField("gameSetting", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            return (IGameSetting) field.GetValue(game);
+            return (T) field.GetValue(game);
         }
         
         private static MethodInfo GetEndNightMethod(Game game)

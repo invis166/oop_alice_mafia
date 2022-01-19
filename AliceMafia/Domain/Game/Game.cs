@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AliceMafia.PlayerState;
 using AliceMafia.Setting;
 using AliceMafia.Setting.DefaultSetting;
 using AliceMafia.Voting;
@@ -9,15 +10,16 @@ namespace AliceMafia
 {
     public class Game : IGame
     {
-        private IGameSetting gameSetting;
+        private GameContext context;
         private RoleFactoryBase roleFactory;
-        private GameState gameState;
         public List<Player> Players { get; }
 
         public Game()
         {
-            gameSetting = new DefaultGameSetting();
-            gameState = new GameState();
+            var gameSetting = new DefaultGameSetting();
+            var gameState = new GameState();
+            
+            context = new GameContext(gameSetting, gameState);
             roleFactory = new RoleFactory(gameState);
             Players = new List<Player>();
         }
@@ -31,12 +33,12 @@ namespace AliceMafia
         {
             SetRoles();
             foreach (var player in Players)
-                gameState.AlivePlayers.Add(player);
+                context.State.AlivePlayers.Add(player);
         }
 
         public void SetSetting(IGameSetting setting)
         {
-            gameSetting = setting;
+            context.Setting = setting;
         }
 
         private void SetRoles()
@@ -68,216 +70,12 @@ namespace AliceMafia
             }
         }
 
-        private UserResponse ProcessRequestWhileDay(UserRequest userRequest)
-        {
-            var gameOver = CheckGameOver();
-            if (gameOver.IsGameOver)
-                return gameOver;
-            
-            var currentPlayer = GetPlayerById(userRequest.UserId);
-            currentPlayer.HasVoted = false;
-            if (!gameState.AlivePlayers.Contains(currentPlayer))
-                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
-
-            if (currentPlayer.State == PlayerState.DayWaiting)
-                return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
-
-            if (gameState.DaysCounter == 0)
-                return HandleFirstDay(currentPlayer);
-            
-            if (currentPlayer.State == PlayerState.DayVoting)
-                return HandleVote(userRequest, currentPlayer);
-            
-            if (currentPlayer.State == PlayerState.NightWaiting || currentPlayer.State == PlayerState.NightAction)
-                return HandleDayStart(currentPlayer);
-            
-            return new UserResponse();
-        }
-
-        private UserResponse HandleDayStart(Player currentPlayer)
-        {
-            currentPlayer.State = PlayerState.DayVoting;
-            var killMessage = gameSetting.GeneralMessages.GetKillMessage(gameState
-                .KilledAtNightPlayers
-                .Where(x => x.Id != gameState.HealedPlayer?.Id)
-                .Select(x => x.Name).ToList());
-            
-            return new UserResponse
-            {
-                Title = $"{killMessage}. {gameSetting.GeneralMessages.DayVotingMessage}",
-                Buttons = gameState.AlivePlayers
-                    .Where(x => x.Id != currentPlayer.Id && x.Id != gameState.PlayerWithAlibi?.Id)
-                    .ToDictionary(keySelector: player => player.Id, elementSelector: player => player.Name)
-            };
-        }
-
-        private UserResponse HandleVote(UserRequest userRequest, Player currentPlayer)
-        {
-            gameState.Voting.AddVote(GetPlayerById(userRequest.Payload));
-            currentPlayer.State = PlayerState.DayWaiting;
-
-            if (gameState.Voting.totalVoteCounter == gameState.AlivePlayers.Count)
-            {
-                gameState.TimeOfDay = TimeOfDay.Night;
-                gameState.DaysCounter++;
-                
-                var votingResult = gameState.Voting.GetResult();
-                if (votingResult.Count == 1)
-                    gameState.AlivePlayers.Remove(votingResult.First());
-                
-                return new UserResponse {Title = gameSetting.GeneralMessages.DayEndMessage};
-            }
-
-            return new UserResponse {Title = gameSetting.GeneralMessages.DayWaitingMessage};
-        }
-
-        private UserResponse HandleFirstDay(Player currentPlayer)
-        {
-            currentPlayer.State = PlayerState.DayWaiting;
-            string roleName;
-            if (gameState.AlivePlayers.Count(player => player.State == PlayerState.DayWaiting) == gameState.AlivePlayers.Count)
-            {
-                gameState.TimeOfDay = TimeOfDay.Night;
-                gameState.DaysCounter++;
-                roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
-                return new UserResponse {Title = $"Ваша роль {roleName}"};
-            }
-
-            roleName = gameSetting.roles[currentPlayer.Role.GetType().Name].Name;
-            return new UserResponse {Title = $"Ваша роль {roleName}"};
-        }
-
-        private UserResponse ProcessRequestWhileNight(UserRequest userRequest)
-        {
-            var gameOver = CheckGameOver();
-            if (gameOver.IsGameOver)
-                return gameOver;
-            
-            var currentPlayer = GetPlayerById(userRequest.UserId);
-            
-            if (!gameState.AlivePlayers.Contains(currentPlayer))
-                return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
-            
-            if (currentPlayer.State == PlayerState.DayWaiting && gameState.DaysCounter != 1)
-                return HandleDayResult(userRequest);
-            
-            var currentPriority = currentPlayer.Role.Priority;
-            if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn)
-            {
-                currentPlayer.State = PlayerState.NightWaiting;
-                return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
-            }
-            
-            if (currentPlayer.State == PlayerState.NightAction)
-                return HandleNightAction(userRequest, currentPlayer, currentPriority);
-
-            if (currentPriority == gameState.WhoseTurn)
-                return HandleNightActionMessage(currentPlayer);
-
-            return new UserResponse();
-        }
-
-        private UserResponse HandleNightAction(UserRequest userRequest, Player currentPlayer, int currentPriority)
-        {
-            currentPlayer.Role.NightAction.DoAction(GetPlayerById(userRequest.Payload));
-            currentPlayer.State = PlayerState.NightWaiting;
-            currentPlayer.HasVoted = true;
-
-            var countOfNotVotedPlayers = gameState.AlivePlayers.Count(x
-                => x.Role.Priority == gameState.WhoseTurn && !x.HasVoted);
-            if (countOfNotVotedPlayers == 0 && !(currentPlayer.Role is Civilian))
-            {
-                var nextPriority = NextPriority(currentPriority);
-                if (nextPriority == 0)
-                    nextPriority = EndNight();
-
-                gameState.WhoseTurn = nextPriority;
-            }
-
-            if (currentPlayer.Role is Sheriff)
-            {
-                var isMafia = gameState.CheckedBySheriff.Role is Mafia;
-                var mafiaName = gameSetting.roles["Mafia"].Name;
-                return new UserResponse {Title = "Игрок " + (isMafia ? "" : "не ") + mafiaName};
-            }
-
-            return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
-        }
-
-        private int EndNight()
-        {
-            int nextPriority;
-            gameState.TimeOfDay = TimeOfDay.Day;
-            foreach (var player in gameState.AlivePlayers)
-                player.State = PlayerState.NightWaiting;
-            var mafiaVoteResult = gameState.Voting.GetResult();
-            if (mafiaVoteResult.Count == 1)
-                gameState.KilledAtNightPlayers.Add(mafiaVoteResult.First());
-            gameState.Voting = new Vote<Player>();
-            nextPriority = 1;
-            if (gameState.HealedPlayer != null)
-                gameState.KilledAtNightPlayers.Remove(gameState.HealedPlayer);
-            gameState.AlivePlayers.ExceptWith(gameState.KilledAtNightPlayers);
-            return nextPriority;
-        }
-
-        private UserResponse HandleNightActionMessage(Player currentPlayer)
-        {
-            currentPlayer.State = PlayerState.NightAction;
-
-
-            return new UserResponse
-            {
-                Title = gameSetting.roles[currentPlayer.Role.GetType().Name].NightActionMessage,
-                Buttons = gameState.AlivePlayers
-                    .Where(x => x.Id != currentPlayer.Id)
-                    .ToDictionary(keySelector: player => player.Id, elementSelector: player => player.Name)
-            };
-        }
-
-        private UserResponse HandleDayResult(UserRequest request)
-        {
-            var currentPlayer = GetPlayerById(request.UserId);
-            currentPlayer.State = PlayerState.NightWaiting;
-            var voteResult = gameState.Voting.GetResult();
-            if (gameState.AlivePlayers.All(player => player.State != PlayerState.DayWaiting))
-                gameState.Clear();
-            if (voteResult.Count == 1)
-            {
-                var jailedPlayer = voteResult.First();
-                return new UserResponse { Title = gameSetting.GeneralMessages.GetJailMessage(jailedPlayer.Name) };
-            }
-            return new UserResponse { Title = gameSetting.GeneralMessages.UndecidedJailMessage };
-        }
-
-        private UserResponse CheckGameOver()
-        {
-            var mafiaPlayersCount = gameState.AlivePlayers.Count(player => player.Role is Mafia);
-            var peacefulPlayersCount = gameState.AlivePlayers.Count(player => !(player.Role is Mafia));
-
-            if (peacefulPlayersCount == mafiaPlayersCount)
-                return new UserResponse {Title = gameSetting.GeneralMessages.MafiaWinMessage, IsGameOver = true};
-            if (mafiaPlayersCount == 0)
-                return new UserResponse {Title = gameSetting.GeneralMessages.PeacefulWinMessage, IsGameOver = true};
-            
-            return new UserResponse {IsGameOver = false};
-        }
-        
-
         public UserResponse HandleUserRequest(UserRequest request)
         {
-            if (gameState.TimeOfDay == TimeOfDay.Day)
-                return ProcessRequestWhileDay(request);
+            var currentPlayer = context.State.GetAlivePlayerById(request.UserId);
+            currentPlayer.State ??= new FirstDayState(currentPlayer, context);
             
-            return ProcessRequestWhileNight(request);
+            return currentPlayer.State.HandleUserRequest(request);
         }
-
-        public int NextPriority(int priority) => gameState
-            .AlivePlayers
-            .Select(x => x.Role.Priority)
-            .OrderBy(x => x)
-            .FirstOrDefault(x => x > priority);
-
-       private Player GetPlayerById(string id) => Players.First(player => player.Id == id);
     }
 }

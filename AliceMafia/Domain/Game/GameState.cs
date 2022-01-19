@@ -1,23 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using AliceMafia.Voting;
 
 namespace AliceMafia
 {
-    public enum TimeOfDay
-    {
-        Day,
-        Night,
-    }
-    
     public class GameState
     {
         public Player HealedPlayer { get; set; }
         public Player PlayerWithAlibi { get; set; }
         public Player CheckedBySheriff { get; set; }
-        public int DaysCounter;
         public HashSet<Player> AlivePlayers { get; set; }
         public List<Player> KilledAtNightPlayers { get; set; }
-        public TimeOfDay TimeOfDay { get; set; }
         public Vote<Player> Voting { get; set; }
         public List<Player> DayVotingResult { get; set; }
         public int WhoseTurn;
@@ -28,10 +21,8 @@ namespace AliceMafia
             HealedPlayer = default;
             PlayerWithAlibi = default;
             CheckedBySheriff = default;
-            DaysCounter = 0;
             AlivePlayers = new HashSet<Player>();
             KilledAtNightPlayers = new List<Player>();
-            TimeOfDay = TimeOfDay.Day;
             Voting = new Vote<Player>();
             DayVotingResult = new List<Player>();
         }
@@ -44,6 +35,13 @@ namespace AliceMafia
             Voting = new Vote<Player>();
             KilledAtNightPlayers.Clear();
         }
+        
+        public Player GetAlivePlayerById(string id) => AlivePlayers.First(player => player.Id == id);
+        
+        public int NextPriority(int priority) => AlivePlayers
+            .Select(x => x.Role.Priority)
+            .OrderBy(x => x)
+            .FirstOrDefault(x => x > priority);
     }
 
     
