@@ -158,16 +158,13 @@ namespace AliceMafia
             if (!gameState.AlivePlayers.Contains(currentPlayer))
                 return new UserResponse {Title = gameSetting.GeneralMessages.DeathMessage};
             
-            if (gameState.AlivePlayers.All(player => player.State != PlayerState.DayWaiting))
-                gameState.Clear();
-
             if (currentPlayer.State == PlayerState.DayWaiting && gameState.DaysCounter != 1)
                 return HandleDayResult(userRequest);
             
             var currentPriority = currentPlayer.Role.Priority;
             if (currentPlayer.HasVoted || currentPriority != gameState.WhoseTurn)
             {
-                currentPlayer.State = PlayerState.NightWaiting; // можно убрать наверное
+                currentPlayer.State = PlayerState.NightWaiting;
                 return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
             }
             
@@ -192,19 +189,7 @@ namespace AliceMafia
             {
                 var nextPriority = NextPriority(currentPriority);
                 if (nextPriority == 0)
-                {
-                    gameState.TimeOfDay = TimeOfDay.Day;
-                    foreach (var player in gameState.AlivePlayers)
-                        player.State = PlayerState.NightWaiting;
-                    var mafiaVoteResult = gameState.Voting.GetResult();
-                    if (mafiaVoteResult.Count == 1)
-                        gameState.KilledAtNightPlayers.Add(mafiaVoteResult.First());
-                    gameState.Voting = new Vote<Player>();
-                    nextPriority = 1;
-                    if (gameState.HealedPlayer != null)
-                        gameState.KilledAtNightPlayers.Remove(gameState.HealedPlayer);
-                    gameState.AlivePlayers.ExceptWith(gameState.KilledAtNightPlayers);
-                }
+                    nextPriority = EndNight();
 
                 gameState.WhoseTurn = nextPriority;
             }
@@ -217,6 +202,23 @@ namespace AliceMafia
             }
 
             return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};
+        }
+
+        private int EndNight()
+        {
+            int nextPriority;
+            gameState.TimeOfDay = TimeOfDay.Day;
+            foreach (var player in gameState.AlivePlayers)
+                player.State = PlayerState.NightWaiting;
+            var mafiaVoteResult = gameState.Voting.GetResult();
+            if (mafiaVoteResult.Count == 1)
+                gameState.KilledAtNightPlayers.Add(mafiaVoteResult.First());
+            gameState.Voting = new Vote<Player>();
+            nextPriority = 1;
+            if (gameState.HealedPlayer != null)
+                gameState.KilledAtNightPlayers.Remove(gameState.HealedPlayer);
+            gameState.AlivePlayers.ExceptWith(gameState.KilledAtNightPlayers);
+            return nextPriority;
         }
 
         private UserResponse HandleNightActionMessage(Player currentPlayer)
@@ -238,12 +240,13 @@ namespace AliceMafia
             var currentPlayer = GetPlayerById(request.UserId);
             currentPlayer.State = PlayerState.NightWaiting;
             var voteResult = gameState.Voting.GetResult();
+            if (gameState.AlivePlayers.All(player => player.State != PlayerState.DayWaiting))
+                gameState.Clear();
             if (voteResult.Count == 1)
             {
                 var jailedPlayer = voteResult.First();
                 return new UserResponse { Title = gameSetting.GeneralMessages.GetJailMessage(jailedPlayer.Name) };
             }
-
             return new UserResponse { Title = gameSetting.GeneralMessages.UndecidedJailMessage };
         }
 

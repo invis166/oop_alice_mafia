@@ -6,7 +6,5 @@ namespace AliceMafia
         NightAction,
         DayWaiting,
         NightWaiting,
-        DayResult,
-        NightResult,
     }
 }

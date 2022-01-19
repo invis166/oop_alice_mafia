@@ -115,24 +115,32 @@ namespace AliceMafia
             var playersCount = 5;
             var game = InitializeGame(playersCount);
             var gameState = GetGameState(game);
-
+            
             gameState.DaysCounter = 2;
             gameState.TimeOfDay = TimeOfDay.Night;
 
             var doctorPlayer = gameState.AlivePlayers.First(player => player.Role is Doctor);
             var victim = gameState.AlivePlayers.First(player => player.Role is Civilian);
             var mafiaPlayers = gameState.AlivePlayers.Where(player => player.Role is Mafia);
+            
+            Assert.True(gameState.AlivePlayers.Contains(victim));
+            
             foreach (var player in gameState.AlivePlayers)
                 game.HandleUserRequest(new UserRequest {UserId = player.Id});
-                
+            
+            
             foreach (var mafia in mafiaPlayers)
                 game.HandleUserRequest(new UserRequest {UserId = mafia.Id, Payload = victim.Id});
-
-            gameState.WhoseTurn = doctorPlayer.Role.Priority;
-
-            // надо ночь закончить сделайте кто нибудь....
-            //game.ProcessUserRequest(new UserRequest {UserId = doctorPlayer.Id, Payload = victim.Id});
             
+            game.HandleUserRequest(new UserRequest {UserId = doctorPlayer.Id});
+            game.HandleUserRequest(new UserRequest {UserId = doctorPlayer.Id, Payload = victim.Id});
+            
+            var endNightMethod = GetEndNightMethod(game);
+
+            endNightMethod.Invoke(game, System.Array.Empty<object>());
+
+            Assert.True(gameState.TimeOfDay == TimeOfDay.Day);
+            Assert.True(gameState.AlivePlayers.Contains(victim));
         }
         
         public static Game InitializeGame(int playersCount)
@@ -146,18 +154,25 @@ namespace AliceMafia
             return game;
         }
 
-        public static GameState GetGameState(Game game)
+        private static GameState GetGameState(Game game)
         {
             var field = game.GetType().GetField("gameState", BindingFlags.NonPublic | BindingFlags.Instance);
 
             return (GameState) field.GetValue(game);
         }
 
-        public static IGameSetting GetGameSetting(Game game)
+        private static IGameSetting GetGameSetting(Game game)
         {
             var field = game.GetType().GetField("gameSetting", BindingFlags.NonPublic | BindingFlags.Instance);
 
             return (IGameSetting) field.GetValue(game);
+        }
+        
+        private static MethodInfo GetEndNightMethod(Game game)
+        {
+            var field = game.GetType().GetMethod("EndNight", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return field;
         }
     }
 }
