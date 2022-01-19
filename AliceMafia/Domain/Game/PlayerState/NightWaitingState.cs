@@ -20,7 +20,7 @@ namespace AliceMafia.PlayerState
                 {
                     Title = gameContext.Setting.roles[context.Role.GetType().Name].NightActionMessage,
                     Buttons = gameContext.State.AlivePlayers
-                        .Where(x => x.Id != context.Id)
+                        .Where(x => x.Id != context.Id || x.Role.NightAction.CanActWithItself)
                         .ToDictionary(keySelector: player => player.Id, elementSelector: player => player.Name)
                 };
             }

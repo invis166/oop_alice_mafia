@@ -14,6 +14,7 @@ namespace AliceMafia.Setting.DefaultSetting
         public string DayEndMessage => dayEndTexts[rnd.Next(0, dayEndTexts.Count - 1)];
         public string MafiaWinMessage => mafiaWinTexts[rnd.Next(0, mafiaWinTexts.Count - 1)];
         public string PeacefulWinMessage => civillianWinTexts[rnd.Next(0, civillianWinTexts.Count - 1)];
+        public string AfterVotingMessage => "Ваш голос учтен.";
         public string GetKillMessage(List<string> names) => "Сегодня ночью не стало следующих игроков: " + string.Join(" ", names) + ".";
         public string GetJailMessage(string name) => $"По результатам голосования за решетку отправляется {name}.";
         

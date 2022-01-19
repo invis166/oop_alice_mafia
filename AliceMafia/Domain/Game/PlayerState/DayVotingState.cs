@@ -16,7 +16,7 @@ namespace AliceMafia.PlayerState
             if (gameContext.State.Voting.totalVoteCounter == gameContext.State.AlivePlayers.Count)
                 HandleDayEnd();
 
-            return new UserResponse {Title = gameContext.Setting.GeneralMessages.DayWaitingMessage};
+            return new UserResponse {Title = gameContext.Setting.GeneralMessages.AfterVotingMessage};
         }
 
         private void HandleDayEnd()

@@ -27,6 +27,10 @@ namespace AliceMafia.Application
             var userRequest = new UserRequest {UserId = request.Session.SessionId, Data = request.Request.Command, Payload = request.Request.Payload?.UserId}; 
             var userResponse = game.HandleUserRequest(userRequest);
 
+            if (userResponse.IsGameOver)
+            {
+            }
+
             List<ButtonModel> buttons;
             if (userResponse.Buttons is null)
                 buttons = new List<ButtonModel> {new ButtonModel {Title = "Далее"}};

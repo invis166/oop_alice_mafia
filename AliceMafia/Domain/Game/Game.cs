@@ -72,10 +72,30 @@ namespace AliceMafia
         
         public UserResponse HandleUserRequest(UserRequest request)
         {
-            var currentPlayer = context.State.GetAlivePlayerById(request.UserId);
+            var gameOver = CheckGameOver();
+            if (gameOver.IsGameOver)
+            {
+                return gameOver;
+            }
+            
+            var currentPlayer = GetPlayerById(request.UserId);
             currentPlayer.State ??= new FirstDayState(currentPlayer, context);
             
             return currentPlayer.State.HandleUserRequest(request);
         }
+        private UserResponse CheckGameOver()
+        {
+            var mafiaPlayersCount = context.State.AlivePlayers.Count(player => player.Role is Mafia);
+            var peacefulPlayersCount = context.State.AlivePlayers.Count(player => !(player.Role is Mafia));
+
+            if (peacefulPlayersCount == mafiaPlayersCount)
+                return new UserResponse {Title = context.Setting.GeneralMessages.MafiaWinMessage, IsGameOver = true};
+            if (mafiaPlayersCount == 0)
+                return new UserResponse {Title = context.Setting.GeneralMessages.PeacefulWinMessage, IsGameOver = true};
+            
+            return new UserResponse {IsGameOver = false};
+        }
+
+        private Player GetPlayerById(string userId) => Players.First(player => player.Id == userId);
     }
 }
