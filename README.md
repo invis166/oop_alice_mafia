@@ -1,4 +1,4 @@
-![Яндекс.Мафия](https://imgur.com/QhnLfoa)
+![Яндекс.Мафия](logo.jpg)
 
 Авторы: [Колесников Семён](https://github.com/invis166), [Лифанов Фёдор](https://github.com/amagoosebitch), [Хадыев Вячеслав](https://github.com/Hvv007), [Полуяненко Алёна](https://github.com/NiripsaKakVsegda)
 
