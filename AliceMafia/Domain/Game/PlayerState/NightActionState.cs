@@ -47,7 +47,7 @@ namespace AliceMafia.PlayerState
             foreach (var player in gameContext.State.AlivePlayers)
             {
                 player.HasVoted = false; // исправить надо!!!
-                player.State = new NightResultState(context, gameContext);
+                player.State = new NightResultState(player, gameContext);
             }
             
             var mafiaVoteResult = gameContext.State.Voting.GetResult();

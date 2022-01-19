@@ -23,7 +23,7 @@ namespace AliceMafia.PlayerState
         {
             // все сделали свой голос, переходим к объявлению результатов
             foreach (var player in gameContext.State.AlivePlayers)
-                player.State = new DayResultState(context, gameContext);
+                player.State = new DayResultState(player, gameContext);
 
             var votingResult = gameContext.State.Voting.GetResult();
             if (votingResult.Count == 1)

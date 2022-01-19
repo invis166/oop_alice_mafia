@@ -15,7 +15,7 @@ namespace AliceMafia.PlayerState
             {
                 // день закончен, все узнали свои роли, можно перейти к ночи
                 foreach (var player in gameContext.State.AlivePlayers)
-                    player.State = new NightWaitingState(context, gameContext);
+                    player.State = new NightWaitingState(player, gameContext);
             }
 
             var roleName = gameContext.Setting.roles[context.Role.GetType().Name].Name;
