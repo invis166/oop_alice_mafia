@@ -1,7 +1,6 @@
 using System.Linq;
-using System.Net.Mime;
-using AliceMafia.Domain.Roles;
 using AliceMafia.Voting;
+
 
 namespace AliceMafia.PlayerState
 {
