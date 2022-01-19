@@ -144,9 +144,10 @@ namespace AliceMafia
             game.HandleUserRequest(new UserRequest {UserId = doctorPlayer.Id});
             game.HandleUserRequest(new UserRequest {UserId = doctorPlayer.Id, Payload = victim.Id});
             
-            var endNightMethod = GetEndNightMethod(game);
+            var endNightMethod = GetEndNightMethod();
+            var nightAction = new NightActionState(doctorPlayer, GetPrivateField<GameContext>(game, "context"));
 
-            endNightMethod.Invoke(game, System.Array.Empty<object>());
+            endNightMethod.Invoke(nightAction, System.Array.Empty<object>());
 
             Assert.True(gameState.AlivePlayers.Contains(victim));
         }
@@ -169,9 +170,9 @@ namespace AliceMafia
             return (T) field.GetValue(game);
         }
         
-        private static MethodInfo GetEndNightMethod(Game game)
+        private static MethodInfo GetEndNightMethod()
         {
-            var field = game.GetType().GetMethod("EndNight", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = typeof(NightActionState).GetMethod("HandleNightEnd", BindingFlags.NonPublic | BindingFlags.Instance);
 
             return field;
         }
