@@ -1,6 +1,5 @@
 using AliceMafia.Action;
 using AliceMafia.Application;
-using Ninject;
 using Ninject.Modules;
 
 namespace AliceMafia.Infrastructure

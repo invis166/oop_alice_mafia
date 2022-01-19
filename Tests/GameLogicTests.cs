@@ -1,9 +1,6 @@
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using AliceMafia.PlayerState;
-using AliceMafia.Setting;
-using AliceMafia.Setting.DefaultSetting;
 using NUnit.Framework;
 
 namespace AliceMafia
@@ -151,8 +148,8 @@ namespace AliceMafia
 
             Assert.True(gameState.AlivePlayers.Contains(victim));
         }
-        
-        public static Game InitializeGame(int playersCount)
+
+        private static Game InitializeGame(int playersCount)
         {
             var game = new Game();
             for (var j = 0; j < playersCount; j++)
