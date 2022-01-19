@@ -27,7 +27,7 @@ namespace AliceMafia.Application
             }
 
             return Utils.CreateResponse(
-                "Игра еще не началась, подождите.",
+                "Куда вы торопитесь? Игра еще не началась. Пока соберитесь с духом!",
                 Utils.CreateButtonList("Начать игру!"));
         }
     }

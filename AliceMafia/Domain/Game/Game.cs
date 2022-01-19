@@ -69,7 +69,7 @@ namespace AliceMafia
                 playersCopyList.Remove(player);
             }
         }
-
+        
         public UserResponse HandleUserRequest(UserRequest request)
         {
             var currentPlayer = context.State.GetAlivePlayerById(request.UserId);
