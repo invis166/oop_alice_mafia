@@ -16,11 +16,13 @@ namespace AliceMafia.Controllers
         private static ConcurrentDictionary<string, UserContextBase> activeUsers = new ConcurrentDictionary<string, UserContextBase>();
 
         [HttpPost]
-        public AliceResponse AlicePost(AliceRequest request, UserContextBase context)
+        public AliceResponse AlicePost(AliceRequest request)
         {
             var sessionId = request.Session.SessionId;
             if (!activeUsers.ContainsKey(sessionId))
             {
+                var kernel = new StandardKernel(new ServiceModule());
+                var context = kernel.Get<UserContextBase>();
                 activeUsers[sessionId] = context;
                 context.ChangeState(new DialogStartState(context));
             }
@@ -30,9 +32,8 @@ namespace AliceMafia.Controllers
         
         public static string CreateLobby(IGameSetting setting)
         {
-            var game = CreateGame();
-            var lobby = new GameLobby(game);
-            game.SetSetting(setting);
+            var kernel = new StandardKernel(new ServiceModule());
+            var lobby = new GameLobby(kernel.Get<IGame>(new ConstructorArgument("gameSetting", setting)));
             
             lobbies[lobby.Id] = lobby;
 
@@ -42,11 +43,6 @@ namespace AliceMafia.Controllers
         public static GameLobby GetLobbyById(string lobbyId)
         {
             return lobbies.ContainsKey(lobbyId) ? lobbies[lobbyId] : null;
-        }
-        
-        public static IGame CreateGame()
-        {
-            return DIContainer.ConfigurateContainer().Get<IGame>();
         }
     }
 }

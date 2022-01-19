@@ -5,24 +5,20 @@ using Ninject.Modules;
 
 namespace AliceMafia.Infrastructure
 {
-    public static class DIContainer
+    public class ServiceModule : NinjectModule
     {
-        public static IReadOnlyKernel ConfigurateContainer()
+        public override void Load()
         {
-            var kernel = new KernelConfiguration();
-            kernel.Bind<RoleActionBase>().To<MafiaAction>().WhenInjectedInto<Mafia>();
-            kernel.Bind<RoleActionBase>().To<ManiacAction>().WhenInjectedInto<Maniac>();
-            kernel.Bind<RoleActionBase>().To<SheriffAction>().WhenInjectedInto<Sheriff>();
-            kernel.Bind<RoleActionBase>().To<DoctorAction>().WhenInjectedInto<Doctor>();
-            kernel.Bind<RoleActionBase>().To<CourtesanAction>().WhenInjectedInto<Courtesan>();
-            kernel.Bind<RoleActionBase>().To<EmptyAction>().WhenInjectedInto<Civilian>();
+            Bind<RoleActionBase>().To<MafiaAction>().WhenInjectedInto<Mafia>();
+            Bind<RoleActionBase>().To<ManiacAction>().WhenInjectedInto<Maniac>();
+            Bind<RoleActionBase>().To<SheriffAction>().WhenInjectedInto<Sheriff>();
+            Bind<RoleActionBase>().To<DoctorAction>().WhenInjectedInto<Doctor>();
+            Bind<RoleActionBase>().To<CourtesanAction>().WhenInjectedInto<Courtesan>();
+            Bind<RoleActionBase>().To<EmptyAction>().WhenInjectedInto<Civilian>();
 
-            kernel.Bind<RoleFactoryBase>().To<RoleFactory>();
-            kernel.Bind<UserContextBase>().To<UserContext>();
-            kernel.Bind<IGame>().To<Game>();
-
-            return kernel.BuildReadonlyKernel();
+            Bind<RoleFactoryBase>().To<RoleFactory>();
+            Bind<UserContextBase>().To<UserContext>();
+            Bind<IGame>().To<Game>();
         }
-        
     }
 }
