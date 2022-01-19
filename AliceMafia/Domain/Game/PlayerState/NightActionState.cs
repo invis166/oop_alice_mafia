@@ -59,6 +59,8 @@ namespace AliceMafia.PlayerState
                 gameContext.State.KilledAtNightPlayers.Remove(gameContext.State.HealedPlayer);
             
             gameContext.State.AlivePlayers.ExceptWith(gameContext.State.KilledAtNightPlayers);
+            foreach (var player in gameContext.State.KilledAtNightPlayers)
+                player.State = new DeadState(player, gameContext);
         }
 
     }

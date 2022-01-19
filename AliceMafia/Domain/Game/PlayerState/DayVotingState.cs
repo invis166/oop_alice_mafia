@@ -27,7 +27,11 @@ namespace AliceMafia.PlayerState
 
             var votingResult = gameContext.State.Voting.GetResult();
             if (votingResult.Count == 1)
-                gameContext.State.AlivePlayers.Remove(votingResult.First());
+            {
+                var killedPlayer = votingResult.First();
+                gameContext.State.AlivePlayers.Remove(killedPlayer);
+                killedPlayer.State = new DeadState(killedPlayer, gameContext);
+            }
         }
 
     }
