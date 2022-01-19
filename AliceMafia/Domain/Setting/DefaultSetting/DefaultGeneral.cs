@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace AliceMafia.Setting.DefaultSetting
@@ -5,25 +6,70 @@ namespace AliceMafia.Setting.DefaultSetting
     public class DefaultGeneral : IGeneralSetting
     {
         public string GameStartMessage { get; }
-        public string DeathMessage => "К сожалению, вы мертвы.";
+        public string DeathMessage => deathTexts[rnd.Next(0, deathTexts.Count - 1)];
         public string DayVotingMessage => "Проголосуйте за того, кого считаете мафией:";
-        public string DayWaitingMessage => "Ожидайте окончания голосования.";
-        public string NightWaitingMessage => "Сейчас ночь. Ожидайте следующего дня или своей очереди ходить.";
-        public string UndecidedJailMessage => "Игроки не пришли к единогласному решению на дневном голосовании.";
-        public string DayEndMessage => "День окончен.";
-        public string MafiaWinMessage => "Мафия победила.";
-        public string PeacefulWinMessage => "Мирные жители победили.";
-
-        public string GetKillMessage(List<string> names)
+        public string DayWaitingMessage => dayWaitingTexts[rnd.Next(0, dayWaitingTexts.Count - 1)];
+        public string NightWaitingMessage => nigthTexts[rnd.Next(0, nigthTexts.Count - 1)];
+        public string UndecidedJailMessage => undecidedMafiaTexts[rnd.Next(0, undecidedMafiaTexts.Count - 1)];
+        public string DayEndMessage => dayEndTexts[rnd.Next(0, dayEndTexts.Count - 1)];
+        public string MafiaWinMessage => mafiaWinTexts[rnd.Next(0, mafiaWinTexts.Count - 1)];
+        public string PeacefulWinMessage => civillianWinTexts[rnd.Next(0, civillianWinTexts.Count - 1)];
+        public string GetKillMessage(List<string> names) => "Сегодня ночью не стало следующих игроков: " + string.Join(" ", names) + ".";
+        public string GetJailMessage(string name) => $"По результатам голосования за решетку отправляется {name}.";
+        
+        private Random rnd = new Random();
+        private List<string> nigthTexts = new List<string>
         {
-            var joinedNames = string.Join(" ", names);
-            
-            return "Сегодня ночью не стало следующих игроков: " + joinedNames;
-        }
-
-        public string GetJailMessage(string name)
+            "Вам снится сон про маленьких единорожков, поэтому пока вы не готовы проснуться.",
+            "Вам сейчас лень просыпаться, поэтому вы продолжаете спать.",
+            "Кажется, самое время проснуться! А, нет, показалось...",
+            "На улице так темно и страшно, а в кровати тепло и уютно. Пока у вас нет абсолютно никакого желания открывать глаза.",
+            "Не мешайте себе спать!",
+            "Кажется, сейчас не самое подходящее время, чтобы просыпаться.",
+            "Сон - это лучшее, что вообще есть в жизни. Вы пока не готовы от него отказаться.",
+            "Нет, спите дальше."
+        };
+        private List<string> deathTexts = new List<string>
         {
-            return $"По результатам голосования за решетку отправляется {name}";
-        }
+            "Вы пали в этом неравном бою. Вас будут помнить всегда. Или нет. Какая разница, вы все равно мертвы.",
+            "Кажется, вы немножко умерли. А жаль.",
+            "Вас убили. Выражаю свои соболезнования. Вы были славным игроком.",
+            "Блин блинский, вас убили:("
+        };
+        private List<string> dayEndTexts = new List<string>
+        {
+            "Наконец-то еще один день подошел к концу. Вы надеетесь, что этой ночью ничего не произойдет, но надежды напрасны.",
+            "С каждым днем ситуация в городе обостряется. Кажется, вы уже не можете уснуть, но сильное снотворное помогает ненадолго расслабиться.",
+            "На город надвигается ночь. Такое чувство, что раз за разом она становится все темнее и мрачнее. Пора спать.",
+            "Город потихоньку неохотно засыпает. Каждый понимает, что эта ночь не будет спокойной, но усталось побеждает, все засыпают."
+        };
+        private List<string> dayWaitingTexts = new List<string>
+        {
+            "Я понимаю, что вы очень хотите узнать результат голосования, но нужно подождать.",
+            "Подождите, не все городские жители такие быстрые, как вы.",
+            "Если вы ткнули на рандом, это не означает, что остальные будут делать так же. Ждите.",
+            "Кажется, не все еще проголосовали, надо немного подождать.",
+            "Голосование еще не окончено, дождитесь остальных.",
+            "Вы же понимаете, что вы не единственный житель этого города? Подождите, пока остальные проголосуют."
+        };
+        private List<string> undecidedMafiaTexts = new List<string>
+        {
+            "На общем собрании все перессорились и так и не смогли прийти к общему решению. Тюрьма сегодня не пополнилась.",
+            "Вы так и не смогли решить, кто из вас главная крыса, поэтому сегодня за решетку никто не отправился.",
+            "Видимо, прийти к общему решению очень тяежло, поэтому вы не смогли никого посадить в тюрьму.",
+            "Дискуссия ни к чему хорошему не привела. Мафия до сих пор на свободе. В следующий раз попытайтесь договориться, иначе..."
+        };
+        private List<string> mafiaWinTexts = new List<string>
+        {
+            "В городе теперь правит мафия. Правда, кем она будет править, если никого не осталось - вопрос хороший.",
+            "Этот город теперь принадлежит мафиози. Они выиграли эту войну: честно или нет - их уже не волнует.",
+            "Мафия смогла переиграть и уничтожить всех, кто стояли у нее на пути. Теперь это их город, никто и ничего больше не сможет им помешать."
+        };
+        private List<string> civillianWinTexts = new List<string>
+        {
+            "Наконец-то мирные жители смогли одолеть мафию. В город снова возвращаются туристы и иностранные студенты. Не факт, что это самая лучшая концовка.",
+            "Последний член мафии был побежден, и город, наконец-то, смог обрести свободу. Вы будете помнить все жертвы этого времени и надеяться, что такое больше никогда не произойдет.",
+            "Этот город окончательно был очищен от мусора. Мирные жители смогли одержать победу над мафией. Впервые за долгое время небо озарило солнце."
+        };
     }
 }

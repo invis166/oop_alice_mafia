@@ -2,7 +2,7 @@ namespace AliceMafia.Setting.DefaultSetting
 {
     public class DefaultCourtesan: IRoleSetting
     {
-        public string Name => "Расин";
-        public string NightActionMessage => "Выберите, кому снизить баллы за кр";
+        public string Name => "Куртизанка";
+        public string NightActionMessage => "Выберите, кого вы хотите охомутать:";
     }
 }

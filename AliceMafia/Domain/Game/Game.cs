@@ -213,7 +213,7 @@ namespace AliceMafia
             {
                 var isMafia = gameState.CheckedBySheriff.Role is Mafia;
                 var mafiaName = gameSetting.roles["Mafia"].Name;
-                return new UserResponse {Title = "Игрок " + (isMafia ? "" : "не ") + mafiaName};
+                return new UserResponse {Title = "Игрок " + (isMafia ? "" : "не ") + mafiaName + "."};
             }
 
             return new UserResponse {Title = gameSetting.GeneralMessages.NightWaitingMessage};

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Hosting;
 
 namespace AliceMafia
@@ -7,7 +8,7 @@ namespace AliceMafia
         public static void Main(string[] args)
         {
             StartServer();
-            
+            Console.WriteLine("Server was started");
         }
 
         private static void StartServer()
